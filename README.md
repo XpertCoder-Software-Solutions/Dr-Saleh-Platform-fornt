@@ -1,16 +1,37 @@
-# React + Vite
+# منصة د. صالح عبد الكريم — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 + TypeScript + Vite, talking to the NestJS backend (`Dr-Saleh-Platform-BackEnd`).
 
-Currently, two official plugins are available:
+## Run
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+cp .env.example .env      # defaults work for local dev
+npm install
+npm run dev               # http://localhost:5173, proxies /api and /uploads to localhost:3000
+```
 
-## React Compiler
+`npm run build` type-checks and builds to `dist/`. `npm run lint` runs ESLint.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+In production set `VITE_API_URL` to the full API URL including `/api`
+(for example `https://api.drsaleh.com/api`) and add the site origin to the
+backend's `CORS_ALLOWED_ORIGINS`.
 
-## Expanding the ESLint configuration
+## Structure
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| Path | What's there |
+|---|---|
+| `src/api/client.ts` | axios instance: unwraps `{ success, message, data }`, refreshes the access token once on 401, then retries; `resolveAssetUrl()` for `/uploads/...` paths |
+| `src/api/endpoints.ts` | typed calls per backend module |
+| `src/types/api.ts` | response types (copied from the backend's `docs/frontend/dr-saleh-api.types.ts`) |
+| `src/auth/` | `AuthProvider`, `useAuth()`, and `useCopy()` for gender-aware copy |
+| `src/copy/strings.ts` | every gendered string, in three versions: guest (neutral), male, female |
+| `src/styles/` | design tokens, motion layer ported from the design canvas, shared classes |
+| `src/components/` | header, footer, page hero, CTA band, course cover/card, icons, empty/error states |
+| `src/pages/` | home, courses, course details, login, register, verify email, forgot password |
+
+## Gendered copy
+
+The design's rule: an account with gender `Female` sees feminine copy, `Male`
+sees masculine, and guests (or accounts without gender) see neutral copy.
+Add new strings to `src/copy/strings.ts` with all three versions and read them
+with `const t = useCopy(); t('cta.start')`.

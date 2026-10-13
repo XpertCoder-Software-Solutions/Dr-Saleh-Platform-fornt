@@ -1,0 +1,128 @@
+.phero {
+  position: relative;
+  overflow: hidden;
+  padding: calc(var(--header-offset) + 40px) var(--gutter) 90px;
+  color: var(--white);
+}
+
+.phero-dots {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+}
+
+.phero-orb {
+  width: 380px;
+  height: 380px;
+  background: var(--blue-300);
+  top: -140px;
+  left: -60px;
+}
+
+.phero-inner {
+  position: relative;
+  max-width: var(--container);
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  min-height: 220px;
+}
+
+.phero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+}
+
+.phero-crumbs {
+  font-size: 14px;
+  color: var(--on-dark-muted);
+}
+
+.phero-crumbs a {
+  color: var(--on-dark-muted);
+}
+
+.phero-crumbs a:hover {
+  color: var(--white);
+}
+
+.phero-crumbs [aria-current] {
+  color: var(--white);
+  font-weight: 600;
+}
+
+.phero-eyebrow {
+  align-self: flex-start;
+  border-radius: var(--r-pill);
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phero-title {
+  color: var(--white);
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.phero-body {
+  font-size: 18px;
+  line-height: 1.85;
+  color: var(--on-dark);
+}
+
+.phero-portrait {
+  position: relative;
+  width: 260px;
+  height: 280px;
+  flex: none;
+  margin-bottom: -90px;
+}
+
+.phero-arch {
+  position: absolute;
+  inset: 20px 20px 0;
+  border-radius: 140px 140px 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.phero-portrait img {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 100%;
+  width: auto;
+  filter: drop-shadow(0 20px 40px rgba(5, 20, 40, 0.45));
+}
+
+.phero-slot {
+  position: relative;
+  max-width: var(--container);
+  margin: 36px auto 0;
+  z-index: 2;
+}
+
+.phero-wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 60px;
+}
+
+@media (max-width: 860px) {
+  .phero-portrait {
+    display: none;
+  }
+}

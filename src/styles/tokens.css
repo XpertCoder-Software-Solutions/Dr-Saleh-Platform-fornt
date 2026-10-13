@@ -1,0 +1,63 @@
+/* Design tokens from the DesignSystem board. */
+:root {
+  --navy: #0b2e52;
+  --ink: #0c2a4a;
+  --blue-600: #1e5f96;
+  --blue-500: #1f6fa8;
+  --blue-400: #3d9bd8;
+  --blue-300: #4ba9de;
+  --sky: #7cd3ff;
+  --gold: #e8a33d;
+  --gold-light: #f7cf7e;
+
+  --text: #10243a;
+  --text-2: #4a5e73;
+  --muted: #51657a;
+  --muted-2: #7a8a9b;
+  --on-dark: #d6e6f5;
+  --on-dark-muted: #c3d9ee;
+
+  --border: #e1e9f1;
+  --border-2: #d5e0ea;
+  --divider: #edf2f7;
+  --surface: #f6f8fb;
+  --surface-blue: #eaf3fa;
+  --hover: #f2f7fb;
+  --white: #ffffff;
+
+  --success: #2fb36a;
+  --warning: #c2410c;
+  --danger: #b3261e;
+  --danger-dot: #e5484d;
+
+  --grad-navy: linear-gradient(135deg, #0b2e52 0%, #1e5f96 55%, #3d9bd8 100%);
+  --grad-navy-wide: linear-gradient(120deg, #0b2e52 0%, #1e5f96 50%, #3d9bd8 100%);
+  --grad-gold: linear-gradient(135deg, #f7cf7e 0%, #e8a33d 100%);
+  --grad-progress: linear-gradient(90deg, #3d9bd8, #7cd3ff);
+
+  --font-head: 'Readex Pro', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-body: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 24px;
+  --r-2xl: 32px;
+  --r-pill: 999px;
+
+  --shadow-card: 0 24px 48px -26px rgba(30, 95, 150, 0.45);
+  --shadow-pop: 0 30px 70px -24px rgba(12, 42, 74, 0.45);
+  --shadow-float: 0 30px 60px -24px rgba(5, 20, 40, 0.6);
+
+  --container: 1240px;
+  --gutter: 24px;
+  --header-offset: 98px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --gutter: 16px;
+    --header-offset: 84px;
+  }
+}
