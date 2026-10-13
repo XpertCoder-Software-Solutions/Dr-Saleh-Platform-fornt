@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { articlesApi, booksApi, coursesApi } from '@/api/endpoints'
@@ -6,14 +6,18 @@ import { resolveAssetUrl } from '@/api/client'
 import { useAudience, useCopy } from '@/auth/hooks'
 import { routes } from '@/app/routes'
 import { Icon, type IconName } from '@/components/ui/Icon'
+import { buttonClass, eyebrowClass, innerClass, pillTabClass, sectionClass } from '@/components/ui/button'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import { CourseCard, CourseCardSkeleton } from '@/components/course/CourseCard'
+import { courseGridClass } from '@/components/course/grid'
+import { HeroWave } from '@/components/layout/PageHero'
 import { EmptyState, ErrorState } from '@/components/ui/States'
-import { formatDate, formatEGP, minutesLabel, readingMinutes } from '@/lib/format'
 import { Highlight } from '@/components/ui/Highlight'
+import { cn } from '@/lib/cn'
+import { formatDate, formatEGP, minutesLabel, readingMinutes } from '@/lib/format'
 import { usePageTitle } from '@/lib/usePageTitle'
 import type { Book, CourseSummary } from '@/types/api'
 import { CHANNELS } from './channels'
-import './home.css'
 
 const HERO_WORDS = {
   guest: ['فهم أولادكم', 'قلب ابنكم', 'هدوءكم إنتم'],
@@ -27,7 +31,7 @@ const PILLARS: { to: string; title: string; body: string; icon: IconName; grad: 
     title: 'الدورات المسجلة',
     body: 'فيديوهات وملفات PDF وشهادة بعد الإتمام، وتقدر تكمل من أي جهاز.',
     icon: 'video',
-    grad: 'var(--grad-navy)',
+    grad: 'linear-gradient(135deg, #0B2E52 0%, #1E5F96 55%, #3D9BD8 100%)',
     glow: '#1E5F96',
   },
   {
@@ -89,6 +93,8 @@ export function HomePage() {
 
 /* ---------------- hero ---------------- */
 
+const floatCard = 'absolute flex gap-3 rounded-tile bg-white shadow-float'
+
 function Hero() {
   const t = useCopy()
   const audience = useAudience()
@@ -101,113 +107,135 @@ function Hero() {
 
   const { data: home } = useQuery({ queryKey: ['courses', 'home'], queryFn: coursesApi.home })
   const proof = useMemo(() => ratingSummary(home ?? []), [home])
-  const lastCourse = home?.[0]
+  const featured = home?.[0]
 
   return (
-    <section className="hero bg-navy">
-      <div className="dots hero-dots" aria-hidden="true" />
-      <div className="orb" style={{ width: 420, height: 420, background: '#4BA9DE', top: -120, left: -80 }} />
-      <div
-        className="orb"
-        style={{ width: 360, height: 360, background: '#F7CF7E', bottom: -160, left: '30%', opacity: 0.35, animationDelay: '-5s' }}
-      />
-      <div
-        className="orb"
-        style={{ width: 300, height: 300, background: '#7E5BD9', top: '20%', right: -120, opacity: 0.3, animationDelay: '-8s' }}
-      />
+    <section className="relative bg-navy overflow-hidden px-6 pt-42.5 pb-30 max-sm:px-4 max-sm:pt-31 max-sm:pb-24">
+      <div className="absolute inset-0 dots opacity-50" aria-hidden="true" />
+      <div className="orb -top-30 -left-20 size-105 bg-blue-300" />
+      <div className="orb -bottom-40 left-[30%] size-90 bg-gold-light opacity-35 [animation-delay:-5s]" />
+      <div className="orb top-[20%] -right-30 size-75 bg-[#7E5BD9] opacity-30 [animation-delay:-8s]" />
 
-      <div className="hero-inner">
-        <div className="hero-text">
-          <div className="glass rise hero-chip">
-            <span className="pulse hero-dot" />
+      <div className="relative mx-auto flex max-w-site flex-wrap items-center gap-14">
+        <div className="flex min-w-0 flex-[1_1_520px] flex-col gap-7">
+          <div className="inline-flex animate-rise items-center gap-2.5 self-start rounded-full px-4 py-2 text-[15px] font-semibold text-white glass">
+            <span className="size-2.5 flex-none animate-pulse-ring rounded-full bg-sky" />
             المستشار النفسي والتربوي · دورات · كتب · استشارات
           </div>
-          <h1 className="rise d1 hero-title">
+          <h1 className="animate-rise text-[clamp(40px,6vw,64px)] leading-[1.2] font-bold tracking-[-0.5px] text-white [animation-delay:.1s]">
             تربية واعية
             <br />
             تبدأ من{' '}
-            <span className="g-text" aria-live="polite">
+            <span className="text-sheen" aria-live="polite">
               {words[w]}
             </span>
             <span className="caret" aria-hidden="true" />
           </h1>
-          <p className="rise d2 hero-body">{t('home.hero.body')}</p>
-          <div className="rise d3 hero-ctas">
-            <Link to={routes.courses} className="btn btn-gold btn-lg">
+          <p className="max-w-140 animate-rise text-xl leading-[1.85] text-on-dark [animation-delay:.2s] max-sm:text-[17px]">
+            {t('home.hero.body')}
+          </p>
+          <div className="flex animate-rise flex-wrap gap-3.5 [animation-delay:.3s] max-sm:*:flex-[1_1_100%]">
+            <Link to={routes.courses} className={buttonClass({ variant: 'gold', size: 'lg' })}>
               {t('cta.start')}
               <Icon name="arrowLeft" />
             </Link>
-            <Link to={routes.consultation} className="btn btn-glass glass btn-lg">
+            <Link to={routes.consultation} className={buttonClass({ variant: 'glass', size: 'lg' })}>
               {t('cta.bookPrivate')}
             </Link>
           </div>
-          <div className="rise d4 hero-proof">
+          <div className="flex animate-rise flex-wrap items-center gap-7 pt-2 [animation-delay:.45s]">
             {proof && (
               <>
-                <div className="hero-proof-item">
-                  <div className="hero-avatars" aria-hidden="true">
-                    <span style={{ background: 'linear-gradient(135deg, #CFE3F3, #7CC0EC)' }} />
-                    <span style={{ background: 'linear-gradient(135deg, #FBE3B5, #E8A33D)' }} />
-                    <span style={{ background: 'linear-gradient(135deg, #D9D0F5, #8E7BE0)' }} />
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex *:size-11 *:rounded-full *:border-3 *:border-blue-600 *:not-first:-ms-3.5"
+                    aria-hidden="true"
+                  >
+                    <span className="bg-linear-135 from-[#CFE3F3] to-[#7CC0EC]" />
+                    <span className="bg-linear-135 from-[#FBE3B5] to-gold" />
+                    <span className="bg-linear-135 from-[#D9D0F5] to-[#8E7BE0]" />
                   </div>
-                  <div className="hero-proof-text">
-                    <b>
-                      {proof.average} <span className="stars">★★★★★</span>
-                    </b>
-                    <span>من {proof.count} تقييم للمتدربين</span>
-                  </div>
+                  <ProofText
+                    title={
+                      <>
+                        {proof.average} <span className="text-gold-light">★★★★★</span>
+                      </>
+                    }
+                    sub={`من ${proof.count} تقييم للمتدربين`}
+                  />
                 </div>
-                <span className="hero-proof-sep" />
+                <span className="h-10 w-px bg-white/25 max-sm:hidden" />
               </>
             )}
-            <div className="hero-proof-text">
-              <b>شهادة معتمدة</b>
-              <span>بعد إتمام كل دورة</span>
-            </div>
+            <ProofText title="شهادة معتمدة" sub="بعد إتمام كل دورة" />
           </div>
         </div>
 
-        <div className="rise d2 hero-visual" aria-hidden="true">
-          <div className="spin-slow hero-halo" />
-          <div className="hero-arch">
-            <img className="hero-watermark" src="/assets/brand/logo-white.webp" alt="" />
-            <img className="hero-portrait" src="/assets/brand/saleh-cutout.webp" alt="" fetchPriority="high" />
+        <div
+          className="relative h-150 min-w-0 flex-[1_1_480px] animate-rise [animation-delay:.2s] max-[1100px]:hidden"
+          aria-hidden="true"
+        >
+          <div className="absolute top-10 left-1/2 size-130 -translate-x-1/2 rounded-full bg-[conic-gradient(from_200deg,#4ba9de,#f7cf7e,#8e7be0,#4ba9de)] opacity-35 blur-[30px]" />
+          <div className="absolute bottom-0 left-1/2 h-125 w-95 -translate-x-1/2 overflow-hidden rounded-[200px_200px_36px_36px] border border-white/25 bg-linear-to-b from-white/18 to-white/4">
+            <img
+              className="absolute top-10 left-1/2 w-70 -translate-x-1/2 opacity-14"
+              src="/assets/brand/logo-white.webp"
+              alt=""
+            />
+            <img
+              className="absolute bottom-0 left-1/2 h-[96%] w-auto max-w-none -translate-x-1/2 drop-shadow-[0_20px_40px_rgba(5,20,40,.45)]"
+              src="/assets/brand/saleh-cutout.webp"
+              alt=""
+              fetchPriority="high"
+            />
           </div>
-          {lastCourse && (
-            <div className="float hero-card hero-card-progress">
-              <div className="hero-card-row">
-                <span className="hero-card-icon bg-navy">
+          {featured && (
+            <div className={cn(floatCard, 'top-75 -right-2.5 w-65 animate-floaty flex-col px-5 py-4.5')}>
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-10 flex-none bg-navy items-center justify-center rounded-xl text-white">
                   <Icon name="play" size={18} filled />
                 </span>
-                <div className="hero-card-col">
-                  <span className="muted">دورة مميزة</span>
-                  <b>{lastCourse.titleAr}</b>
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="text-[13px] text-muted">دورة مميزة</span>
+                  <b className="text-[15px] leading-snug text-ink">{featured.titleAr}</b>
                 </div>
               </div>
-              <span className="muted">فيديو + PDF + شهادة</span>
+              <span className="text-[13px] text-muted">فيديو + PDF + شهادة</span>
             </div>
           )}
-          <div className="float d2 hero-card hero-card-book">
-            <span className="hero-card-icon gold">
+          <div
+            className={cn(
+              floatCard,
+              'bottom-15 left-0 w-60 animate-floaty items-center gap-3.5 px-4.5 py-4 [animation-delay:-3s]',
+            )}
+          >
+            <span className="flex size-12 flex-none bg-gold items-center justify-center rounded-[14px] text-navy">
               <Icon name="bookClosed" size={22} />
             </span>
-            <div className="hero-card-col">
-              <b>فن تربية الأبناء</b>
-              <span className="muted">ورقي · رقمي · صوتي</span>
+            <div className="flex flex-col gap-0.5">
+              <b className="text-[15px] text-ink">فن تربية الأبناء</b>
+              <span className="text-[13px] text-muted">ورقي · رقمي · صوتي</span>
             </div>
           </div>
           {proof && (
-            <div className="glass float hero-rating" style={{ animationDelay: '-1.5s' }}>
-              <span>★</span> {proof.average} تقييم
+            <div className="absolute top-10 left-7.5 flex animate-floaty items-center gap-2 rounded-2xl px-4 py-3 font-bold text-white glass [animation-delay:-1.5s]">
+              <span className="text-gold-light">★</span> {proof.average} تقييم
             </div>
           )}
         </div>
       </div>
 
-      <svg className="hero-wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
-        <path className="wave-path" d="M0 40 C 360 100 1080 -20 1440 40 L1440 80 L0 80 Z" fill="#F6F8FB" />
-      </svg>
+      <HeroWave />
     </section>
+  )
+}
+
+function ProofText({ title, sub }: { title: ReactNode; sub: string }) {
+  return (
+    <div className="flex flex-col">
+      <b className="text-lg text-white">{title}</b>
+      <span className="text-sm text-on-dark-muted">{sub}</span>
+    </div>
   )
 }
 
@@ -229,17 +257,26 @@ function ratingSummary(courses: CourseSummary[]) {
 function MediaStrip() {
   const doubled = [...CHANNELS, ...CHANNELS]
   return (
-    <section className="media" aria-labelledby="media-title">
-      <div className="container reveal media-head">
-        <h2 id="media-title" className="section-title media-title">
-          ضيف على <span className="g-ink uline">شاشات وإذاعات عربية</span>
+    <section className="pt-2 pb-12" aria-labelledby="media-title">
+      <div className="mx-auto mb-6 flex max-w-site animate-rise justify-center px-6 text-center">
+        <h2 id="media-title" className="text-[clamp(26px,3.5vw,34px)] font-bold">
+          ضيف على <span className="uline text-ink-grad">شاشات وإذاعات عربية</span>
         </h2>
       </div>
-      <div className="marquee media-marquee">
-        <div className="marquee-track media-track">
+      <div className="group overflow-hidden mask-fade-x py-2.5">
+        <div className="flex w-max animate-marquee gap-4 group-hover:[animation-play-state:paused]">
           {doubled.map((c, i) => (
-            <span className="media-logo" key={`${c.src}-${i}`} aria-hidden={i >= CHANNELS.length || undefined}>
-              <img src={c.src} alt={i < CHANNELS.length ? c.name : ''} loading="lazy" />
+            <span
+              key={`${c.src}-${i}`}
+              aria-hidden={i >= CHANNELS.length || undefined}
+              className="group/logo flex h-22 flex-none items-center justify-center rounded-tile border border-line bg-white px-6.5 transition-[box-shadow,border-color] duration-350 hover:border-[#bbd8ee] hover:shadow-[0_16px_34px_-18px_rgba(30,95,150,.5)]"
+            >
+              <img
+                src={c.src}
+                alt={i < CHANNELS.length ? c.name : ''}
+                loading="lazy"
+                className="h-14 w-auto opacity-70 grayscale transition-[filter,opacity,transform] duration-350 group-hover/logo:scale-106 group-hover/logo:opacity-100 group-hover/logo:grayscale-0"
+              />
             </span>
           ))}
         </div>
@@ -252,17 +289,28 @@ function MediaStrip() {
 
 function Pillars() {
   return (
-    <section className="section">
-      <div className="inner stagger pillars">
+    <section className={sectionClass}>
+      <div className={cn(innerClass, 'grid stagger grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-5')}>
         {PILLARS.map((p) => (
-          <Link key={p.to} to={p.to} className="pillar glow-card">
-            <div className="pillar-glow" style={{ background: p.glow }} aria-hidden="true" />
-            <span className="pillar-icon" style={{ background: p.grad, boxShadow: `0 12px 24px -10px ${p.glow}` }}>
+          <Link
+            key={p.to}
+            to={p.to}
+            className="glow-card relative flex flex-col gap-3.5 overflow-hidden rounded-card border border-line bg-white p-7 text-text hover:text-text"
+          >
+            <div
+              className="absolute -top-15 -left-15 size-40 rounded-full opacity-14 blur-[10px]"
+              style={{ background: p.glow }}
+              aria-hidden="true"
+            />
+            <span
+              className="flex size-14.5 items-center justify-center rounded-[18px] text-white"
+              style={{ background: p.grad, boxShadow: `0 12px 24px -10px ${p.glow}` }}
+            >
               <Icon name={p.icon} size={26} />
             </span>
-            <span className="pillar-title">{p.title}</span>
-            <span className="pillar-body">{p.body}</span>
-            <span className="pillar-more">
+            <span className="font-head text-[22px] font-semibold text-ink">{p.title}</span>
+            <span className="leading-[1.7] text-muted">{p.body}</span>
+            <span className="inline-flex items-center gap-1.5 text-[15px] font-bold text-blue-500">
               اكتشف <Icon name="arrowLeft" size={16} />
             </span>
           </Link>
@@ -277,7 +325,10 @@ function Pillars() {
 function CoursesSection() {
   const t = useCopy()
   const [tab, setTab] = useState<string>('all')
-  const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['courses', 'home'], queryFn: coursesApi.home })
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['courses', 'home'],
+    queryFn: coursesApi.home,
+  })
 
   const courses = useMemo(() => data ?? [], [data])
   const categories = useMemo(() => {
@@ -288,32 +339,24 @@ function CoursesSection() {
   const shown = courses.filter((c) => tab === 'all' || c.categoryId === tab).slice(0, 3)
 
   return (
-    <section className="section">
-      <div className="inner">
-        <div className="section-head">
-          <div className="title-wrap reveal">
-            <span className="eyebrow">
-              <Icon name="sparkle" size={16} />
-              الأكثر طلبًا
-            </span>
-            <h2 className="section-title">
-              <Highlight text={t('home.courses.title')} />
-            </h2>
-          </div>
-          <Link to={routes.courses} className="more-link">
-            كل الدورات <Icon name="arrowLeft" size={18} />
-          </Link>
-        </div>
+    <section className={sectionClass}>
+      <div className={innerClass}>
+        <SectionHeader
+          eyebrow="الأكثر طلبًا"
+          icon="sparkle"
+          title={<Highlight text={t('home.courses.title')} />}
+          more={{ to: routes.courses, label: 'كل الدورات' }}
+        />
 
         {categories.length > 1 && (
-          <div role="tablist" aria-label="تصنيف الدورات" className="pill-tabs home-tabs">
+          <div role="tablist" aria-label="تصنيف الدورات" className="-mt-2 mb-8 flex flex-wrap gap-2.5">
             {[['all', 'الكل'] as const, ...categories].map(([id, label]) => (
               <button
                 key={id}
                 type="button"
                 role="tab"
                 aria-selected={tab === id}
-                className="pill-tab"
+                className={pillTabClass}
                 onClick={() => setTab(id)}
               >
                 {label}
@@ -325,15 +368,19 @@ function CoursesSection() {
         {isError ? (
           <ErrorState onRetry={() => refetch()} />
         ) : isLoading ? (
-          <div className="course-grid">
+          <div className={courseGridClass}>
             {[0, 1, 2].map((i) => (
               <CourseCardSkeleton key={i} />
             ))}
           </div>
         ) : shown.length === 0 ? (
-          <EmptyState icon="video" title="الدورات جاية قريب" body="بنجهّز أول دفعة من الدورات. تابعنا عشان تعرف أول ما تنزل." />
+          <EmptyState
+            icon="video"
+            title="الدورات جاية قريب"
+            body="بنجهّز أول دفعة من الدورات. تابعنا عشان تعرف أول ما تنزل."
+          />
         ) : (
-          <div className="course-grid stagger">
+          <div className={cn(courseGridClass, 'stagger')}>
             {shown.map((c) => (
               <CourseCard key={c.id} course={c} />
             ))}
@@ -364,7 +411,10 @@ function useCountUp(target: number, run: boolean) {
 }
 
 function StatsBand() {
-  const courses = useQuery({ queryKey: ['courses', 'list', { limit: 100 }], queryFn: () => coursesApi.list({ limit: 100 }) })
+  const courses = useQuery({
+    queryKey: ['courses', 'list', { limit: 100 }],
+    queryFn: () => coursesApi.list({ limit: 100 }),
+  })
   const books = useQuery({ queryKey: ['books'], queryFn: booksApi.list })
 
   const ready = courses.isSuccess && books.isSuccess
@@ -387,22 +437,27 @@ function StatsBand() {
   ]
 
   return (
-    <section className="section">
-      <div className="inner stats bg-navy-wide">
-        <div className="dots stats-dots" aria-hidden="true" />
-        <div className="orb" style={{ width: 260, height: 260, background: '#F7CF7E', right: -60, top: -120, opacity: 0.3 }} />
+    <section className={sectionClass}>
+      <div
+        className={cn(
+          innerClass,
+          'relative grid bg-navy-wide grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6 overflow-hidden rounded-panel p-11 max-sm:rounded-[26px] max-sm:px-5.5 max-sm:py-8',
+        )}
+      >
+        <div className="absolute inset-0 dots opacity-50" aria-hidden="true" />
+        <div className="orb -top-30 -right-15 size-65 bg-gold-light opacity-30" />
         {stats
           .filter((s) => s.show)
           .map((s) => (
-            <div key={s.label} className="stat">
-              <span className="glass stat-icon">
+            <div key={s.label} className="relative flex flex-col items-center gap-2 py-2 text-center">
+              <span className="mb-1 flex size-12 items-center justify-center rounded-[14px] text-gold-light glass">
                 <Icon name={s.icon} size={22} />
               </span>
-              <span className="stat-n">
+              <span className="font-head text-[50px] leading-none font-bold text-white tabular-nums max-sm:text-[40px]">
                 {s.n}
-                {s.suf && <span>{s.suf}</span>}
+                {s.suf && <span className="text-gold-light">{s.suf}</span>}
               </span>
-              <span className="stat-l">{s.label}</span>
+              <span className="text-on-dark-muted">{s.label}</span>
             </div>
           ))}
       </div>
@@ -414,48 +469,69 @@ function StatsBand() {
 
 function AboutDoctor() {
   const t = useCopy()
+  const points: { text: string; icon: IconName; gold?: boolean }[] = [
+    { text: 'المستشار النفسي والتربوي', icon: 'check' },
+    { text: 'رئيس مركز السعادة للاستشارات النفسية والتربوية', icon: 'check' },
+    { text: 'مقدّم برنامج «فن التربية» على قناة الرحمة', icon: 'video', gold: true },
+  ]
   return (
-    <section className="section">
-      <div className="inner gborder about">
-        <div className="tilt about-photo">
-          <div className="spin-slow about-ring" aria-hidden="true" />
-          <img src="/assets/brand/saleh-cutout.webp" alt="الدكتور صالح عبد الكريم" loading="lazy" />
+    <section className={sectionClass}>
+      <div
+        className={cn(
+          innerClass,
+          'flex flex-wrap items-center gap-14 rounded-band p-14 gborder max-sm:rounded-[26px] max-sm:px-5.5 max-sm:py-8',
+        )}
+      >
+        <div className="relative flex aspect-4/5 max-h-120 min-w-0 flex-[1_1_340px] tilt items-center justify-center overflow-hidden rounded-[28px] bg-linear-160 from-[#dcebf6] via-[#bfddf2] to-[#fbe3b5]">
+          <div
+            className="absolute size-80 animate-spin-slow rounded-full border-2 border-dashed border-navy/18"
+            aria-hidden="true"
+          />
+          <img
+            src="/assets/brand/saleh-cutout.webp"
+            alt="الدكتور صالح عبد الكريم"
+            loading="lazy"
+            className="absolute bottom-0 left-1/2 h-[94%] w-auto max-w-none -translate-x-1/2"
+          />
         </div>
-        <div className="about-text">
-          <span className="eyebrow">
+        <div className="flex min-w-0 flex-[1.3_1_480px] flex-col gap-6 max-sm:basis-full">
+          <span className={eyebrowClass}>
             <Icon name="user" size={16} />
             عن الدكتور
           </span>
-          <img className="about-sign" src="/assets/brand/logo-blue.webp" alt="الدكتور صالح عبد الكريم" loading="lazy" />
-          <p className="about-quote">
-            «مش مطلوب إن ابنك يكون مثالي… المطلوب إنه يكون <span className="g-ink">سوي، واثق في نفسه</span>، وقادر يتكيّف مع
-            الدنيا.»
+          <img
+            className="w-80 max-w-full"
+            src="/assets/brand/logo-blue.webp"
+            alt="الدكتور صالح عبد الكريم"
+            loading="lazy"
+          />
+          <p className="font-head text-[clamp(20px,2.4vw,26px)] leading-[1.7] font-medium text-ink">
+            «مش مطلوب إن ابنك يكون مثالي… المطلوب إنه يكون{' '}
+            <span className="text-ink-grad">سوي، واثق في نفسه</span>، وقادر يتكيّف مع الدنيا.»
           </p>
-          <p className="about-body">
-            مؤلف كتاب «فن تربية الأبناء»، وبيقدّم برامج في التربية الإيجابية والبناء النفسي للأطفال والمراهقين بأسلوب عملي مبسّط
-            تقدر تطبقه في البيت.
+          <p className="text-[17px] leading-[1.9] text-text-2">
+            مؤلف كتاب «فن تربية الأبناء»، وبيقدّم برامج في التربية الإيجابية والبناء النفسي للأطفال والمراهقين
+            بأسلوب عملي مبسّط تقدر تطبقه في البيت.
           </p>
-          <ul className="stagger about-list">
-            <li>
-              <span className="bg-navy">
-                <Icon name="check" size={16} />
-              </span>
-              المستشار النفسي والتربوي
-            </li>
-            <li>
-              <span className="bg-navy">
-                <Icon name="check" size={16} />
-              </span>
-              رئيس مركز السعادة للاستشارات النفسية والتربوية
-            </li>
-            <li>
-              <span className="bg-gold gold">
-                <Icon name="video" size={16} />
-              </span>
-              مقدّم برنامج «فن التربية» على قناة الرحمة
-            </li>
+          <ul className="flex stagger flex-col gap-2.5">
+            {points.map((p) => (
+              <li key={p.text} className="flex items-center gap-3 font-semibold text-ink">
+                <span
+                  className={cn(
+                    'flex size-8.5 flex-none items-center justify-center rounded-[10px]',
+                    p.gold ? 'bg-gold text-navy' : 'bg-navy text-white',
+                  )}
+                >
+                  <Icon name={p.icon} size={16} />
+                </span>
+                {p.text}
+              </li>
+            ))}
           </ul>
-          <Link to={routes.consultation} className="btn btn-navy about-cta">
+          <Link
+            to={routes.consultation}
+            className={buttonClass({ variant: 'navy', className: 'self-start' })}
+          >
             {t('cta.bookDoctor')}
           </Link>
         </div>
@@ -475,6 +551,10 @@ function bookStartPrice(book: Book): number | null {
   return book.discountPriceEGP ?? book.priceEGP ?? null
 }
 
+/** Up to 4 per row; fewer books keep their width. */
+const booksGridClass =
+  'grid grid-cols-[repeat(auto-fill,minmax(max(220px,calc((100%-72px)/4)),1fr))] gap-6 max-sm:grid-cols-2 max-sm:gap-3'
+
 function BooksSection() {
   const t = useCopy()
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['books'], queryFn: booksApi.list })
@@ -488,30 +568,23 @@ function BooksSection() {
   if (!isLoading && !isError && books.length === 0) return null
 
   return (
-    <section className="section">
-      <div className="inner">
-        <div className="section-head">
-          <div className="title-wrap reveal">
-            <span className="eyebrow">
-              <Icon name="book" size={16} />
-              من المكتبة
-            </span>
-            <h2 className="section-title">
-              <Highlight text={t('home.books.title')} />
-            </h2>
-          </div>
-          <Link to={routes.library} className="more-link">
-            تصفّح المكتبة <Icon name="arrowLeft" size={18} />
-          </Link>
-        </div>
-
+    <section className={sectionClass}>
+      <div className={innerClass}>
+        <SectionHeader
+          eyebrow="من المكتبة"
+          icon="book"
+          title={<Highlight text={t('home.books.title')} />}
+          more={{ to: routes.library, label: 'تصفّح المكتبة' }}
+        />
         {isError ? (
           <ErrorState onRetry={() => refetch()} compact />
         ) : (
-          <div className="books-grid">
+          <div className={booksGridClass}>
             {isLoading
-              ? [0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 380, borderRadius: 24 }} />)
-              : books.map((b, i) => <BookCard key={b.id} book={b} theme={BOOK_THEMES[i % BOOK_THEMES.length]} />)}
+              ? [0, 1, 2, 3].map((i) => <div key={i} className="h-95 skeleton rounded-card" />)
+              : books.map((b, i) => (
+                  <BookCard key={b.id} book={b} theme={BOOK_THEMES[i % BOOK_THEMES.length]} />
+                ))}
           </div>
         )}
       </div>
@@ -523,31 +596,56 @@ function BookCard({ book, theme }: { book: Book; theme: (typeof BOOK_THEMES)[num
   const cover = resolveAssetUrl(book.coverImage)
   const price = bookStartPrice(book)
   const formats = [...new Set(book.formats.filter((f) => f.isActive).map((f) => f.formatType))]
+  const bookShadow = 'rounded-[4px_10px_10px_4px] shadow-[-10px_16px_30px_-10px_rgba(12,42,74,.55)]'
   return (
-    <Link to={`${routes.library}/${book.slug}`} className="book-card glow-card">
-      <div className="book-shelf" style={{ background: theme.shelf }}>
+    <Link
+      to={`${routes.library}/${book.slug}`}
+      className="glow-card flex flex-col gap-4 rounded-card border border-line bg-white p-4.5 text-text hover:text-text max-sm:p-3"
+    >
+      <div
+        className="flex h-65 items-center justify-center overflow-hidden rounded-2xl max-sm:h-50"
+        style={{ background: theme.shelf }}
+      >
         {cover ? (
-          <img className="tilt book-img" src={cover} alt="" loading="lazy" />
+          <img
+            className={cn('h-53.5 w-auto tilt max-sm:h-40', bookShadow)}
+            src={cover}
+            alt=""
+            loading="lazy"
+          />
         ) : (
-          <div className="tilt book-spine" style={{ background: theme.grad }}>
-            <span className="book-spine-line" />
-            <span className="book-spine-title">{book.titleAr}</span>
-            <span className="book-spine-author">د. صالح عبد الكريم</span>
+          <div
+            className={cn(
+              'relative flex h-53.5 w-37.5 tilt flex-col justify-between overflow-hidden px-4 py-4.5 max-sm:h-40 max-sm:w-28',
+              bookShadow,
+            )}
+            style={{ background: theme.grad }}
+          >
+            <span className="absolute inset-y-0 right-2 w-0.5 bg-white/25" />
+            <span className="font-head text-xl leading-[1.3] font-bold text-white max-sm:text-base">
+              {book.titleAr}
+            </span>
+            <span className="text-[11px] text-white/85">د. صالح عبد الكريم</span>
           </div>
         )}
       </div>
-      <div className="book-info">
-        <span className="book-title">{book.titleAr}</span>
+      <div className="flex flex-col gap-2.5 px-1 pb-1">
+        <span className="font-head text-[19px] font-semibold text-ink max-sm:text-base">{book.titleAr}</span>
         {formats.length > 0 && (
-          <div className="book-formats">
+          <div className="flex flex-wrap gap-1.5">
             {formats.map((f) => (
-              <span key={f}>{FORMAT_LABEL[f]}</span>
+              <span
+                key={f}
+                className="rounded-lg bg-surface-blue px-2.5 py-1 text-[13px] font-semibold text-blue-500"
+              >
+                {FORMAT_LABEL[f]}
+              </span>
             ))}
           </div>
         )}
         {price !== null && (
-          <span className="book-price">
-            يبدأ من <b>{formatEGP(price)}</b>
+          <span className="text-[15px] text-muted">
+            يبدأ من <b className="text-lg text-ink">{formatEGP(price)}</b>
           </span>
         )}
       </div>
@@ -561,26 +659,42 @@ function ConsultBand() {
   const t = useCopy()
   const steps = [t('home.consult.step1'), t('home.consult.step2'), 'جلسة خاصة مع د. صالح وخطة عملية']
   return (
-    <section className="section">
-      <div className="inner consult bg-navy">
-        <div className="dots consult-dots" aria-hidden="true" />
-        <div className="orb" style={{ width: 340, height: 340, background: '#F7CF7E', left: -100, bottom: -160, opacity: 0.35 }} />
-        <div className="spin-slow consult-ring" aria-hidden="true" />
-        <div className="consult-text">
-          <span className="eyebrow on-dark">
+    <section className={sectionClass}>
+      <div
+        className={cn(
+          innerClass,
+          'relative flex bg-navy flex-wrap items-center gap-12 overflow-hidden rounded-band px-14 py-16 max-sm:rounded-[26px] max-sm:px-5.5 max-sm:py-8',
+        )}
+      >
+        <div className="absolute inset-0 dots opacity-45" aria-hidden="true" />
+        <div className="orb -bottom-40 -left-25 size-85 bg-gold-light opacity-35" />
+        <div
+          className="absolute -top-50 -left-45 size-130 animate-spin-slow rounded-full border-2 border-dashed border-white/14"
+          aria-hidden="true"
+        />
+        <div className="relative flex min-w-0 flex-[1_1_460px] flex-col gap-5 max-sm:basis-full">
+          <span className={cn(eyebrowClass, 'bg-white/10 text-gold-light')}>
             <Icon name="chat" size={16} />
             استشارة فردية
           </span>
-          <h2>{t('home.consult.title')}</h2>
-          <p>{t('home.consult.body')}</p>
-          <Link to={routes.consultation} className="btn btn-gold btn-lg">
+          <h2 className="text-[clamp(30px,4vw,44px)] leading-[1.3] text-white">{t('home.consult.title')}</h2>
+          <p className="text-lg leading-[1.85] text-on-dark">{t('home.consult.body')}</p>
+          <Link
+            to={routes.consultation}
+            className={buttonClass({ variant: 'gold', size: 'lg', className: 'self-start' })}
+          >
             {t('cta.bookNow')}
           </Link>
         </div>
-        <ol className="consult-steps">
+        <ol className="relative flex min-w-0 flex-[1_1_380px] flex-col gap-3.5 max-sm:basis-full">
           {steps.map((s, i) => (
-            <li key={s} className="glass lift">
-              <span className="consult-n">{i + 1}</span>
+            <li
+              key={s}
+              className="flex lift items-center gap-4 rounded-[18px] px-5 py-4.5 text-[17px] text-white glass"
+            >
+              <span className="flex size-10.5 flex-none bg-gold items-center justify-center rounded-full font-extrabold text-navy">
+                {i + 1}
+              </span>
               <span>{s}</span>
             </li>
           ))}
@@ -601,41 +715,54 @@ function Testimonials() {
   }, [n])
   const rv = TESTIMONIALS[i]
   return (
-    <section className="section">
-      <div className="inner">
-        <div className="section-head center">
-          <div className="title-wrap">
-            <span className="eyebrow">
-              <Icon name="quote" size={16} />
-              آراء المتدربين
-            </span>
-            <h2 className="section-title">
-              فرق <span className="g-ink uline">حقيقي</span> في البيت
-            </h2>
-          </div>
-        </div>
-        <div className="reviews">
-          <figure className="gborder review-main">
-            <span className="review-head">{rv.head}</span>
-            <blockquote>{rv.body}</blockquote>
-            <figcaption>
+    <section className={sectionClass}>
+      <div className={innerClass}>
+        <SectionHeader
+          center
+          eyebrow="آراء المتدربين"
+          icon="quote"
+          title={<Highlight text="فرق *حقيقي* في البيت" />}
+        />
+        <div className="flex flex-wrap items-stretch gap-6">
+          <figure className="m-0 flex flex-[1.2_1_420px] flex-col gap-5 rounded-[28px] p-9 gborder">
+            <span className="font-head text-[26px] font-semibold text-ink">{rv.head}</span>
+            <blockquote className="m-0 text-lg leading-[1.9] text-text-2">{rv.body}</blockquote>
+            <figcaption className="mt-auto flex flex-col border-t border-divider pt-4.5">
               <b>{rv.name}</b>
-              <span>{rv.course}</span>
+              <span className="text-sm text-muted">{rv.course}</span>
             </figcaption>
-            <div className="review-nav">
-              <button type="button" className="btn btn-outline btn-sm" aria-label="السابق" onClick={() => setI((i + n - 1) % n)}>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className={buttonClass({ variant: 'outline', size: 'sm' })}
+                aria-label="السابق"
+                onClick={() => setI((i + n - 1) % n)}
+              >
                 <Icon name="arrowRight" size={16} />
               </button>
-              <button type="button" className="btn btn-navy btn-sm" aria-label="التالي" onClick={() => setI((i + 1) % n)}>
+              <button
+                type="button"
+                className={buttonClass({ variant: 'navy', size: 'sm' })}
+                aria-label="التالي"
+                onClick={() => setI((i + 1) % n)}
+              >
                 <Icon name="arrowLeft" size={16} />
               </button>
             </div>
           </figure>
-          <div className="review-list">
+          <div className="flex flex-[1_1_320px] flex-col gap-3.5">
             {TESTIMONIALS.map((r, k) => (
-              <button key={r.head} type="button" className={`review-pick${k === i ? ' is-on' : ''}`} onClick={() => setI(k)}>
+              <button
+                key={r.head}
+                type="button"
+                onClick={() => setI(k)}
+                className={cn(
+                  'flex flex-col gap-1 rounded-tile border px-5 py-4.5 text-start',
+                  k === i ? 'border-glow bg-[#f2f8fd]' : 'border-line bg-white',
+                )}
+              >
                 <b>{r.head}</b>
-                <span>{r.course}</span>
+                <span className="text-sm text-muted">{r.course}</span>
               </button>
             ))}
           </div>
@@ -662,42 +789,51 @@ function ArticlesSection() {
   if (isError || (!isLoading && articles.length === 0)) return null
 
   return (
-    <section className="section">
-      <div className="inner">
-        <div className="section-head">
-          <div className="title-wrap reveal">
-            <span className="eyebrow">
-              <Icon name="pen" size={16} />
-              أحدث المقالات
-            </span>
-            <h2 className="section-title">اقرأ في ٥ دقايق</h2>
-          </div>
-          <Link to={routes.blog} className="more-link">
-            كل المقالات <Icon name="arrowLeft" size={18} />
-          </Link>
-        </div>
-        <div className="articles-grid">
+    <section className={sectionClass}>
+      <div className={innerClass}>
+        <SectionHeader
+          eyebrow="أحدث المقالات"
+          icon="pen"
+          title="اقرأ في ٥ دقايق"
+          more={{ to: routes.blog, label: 'كل المقالات' }}
+        />
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(max(280px,calc((100%-48px)/3)),1fr))] gap-6 max-sm:grid-cols-1">
           {isLoading
-            ? [0, 1, 2].map((i) => <div key={i} className="skeleton" style={{ height: 300, borderRadius: 24 }} />)
+            ? [0, 1, 2].map((i) => <div key={i} className="h-75 skeleton rounded-card" />)
             : articles.map((a, i) => {
                 const cover = resolveAssetUrl(a.coverImage)
                 return (
-                  <Link key={a.id} to={`${routes.blog}/${a.slug}`} className="article-card glow-card">
-                    <div className="article-cover" style={{ background: ARTICLE_GRADS[i % ARTICLE_GRADS.length] }}>
-                      {cover ? <img src={cover} alt="" loading="lazy" /> : <div className="dots" />}
-                      {a.category && <span className="glass article-tag">{a.category.name}</span>}
+                  <Link
+                    key={a.id}
+                    to={`${routes.blog}/${a.slug}`}
+                    className="glow-card flex flex-col gap-3.5 rounded-card border border-line bg-white px-3.5 pt-3.5 pb-5.5 text-text hover:text-text"
+                  >
+                    <div
+                      className="relative h-50 overflow-hidden rounded-[18px]"
+                      style={{ background: ARTICLE_GRADS[i % ARTICLE_GRADS.length] }}
+                    >
+                      {cover ? (
+                        <img src={cover} alt="" loading="lazy" className="size-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 dots opacity-40" />
+                      )}
+                      {a.category && (
+                        <span className="absolute right-3.5 bottom-3.5 rounded-full px-3 py-1.25 text-[13px] font-bold text-white glass">
+                          {a.category.name}
+                        </span>
+                      )}
                     </div>
-                    <div className="article-meta">
-                      <span>
+                    <div className="flex gap-4 px-2 text-sm text-muted">
+                      <span className="inline-flex items-center gap-1.5">
                         <Icon name="calendar" size={15} />
                         {formatDate(a.createdAt)}
                       </span>
-                      <span>
+                      <span className="inline-flex items-center gap-1.5">
                         <Icon name="clock" size={15} />
                         {minutesLabel(readingMinutes(a.content ?? a.shortContent))}
                       </span>
                     </div>
-                    <h3 className="article-title">{a.title}</h3>
+                    <h3 className="px-2 text-xl leading-relaxed font-semibold">{a.title}</h3>
                   </Link>
                 )
               })}

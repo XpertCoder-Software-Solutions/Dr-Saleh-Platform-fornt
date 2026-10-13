@@ -4,8 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { useAuth, useCopy } from '@/auth/hooks'
 import { Icon, type IconName } from '@/components/ui/Icon'
+import { buttonClass } from '@/components/ui/button'
 import { routes } from '@/app/routes'
-import './header.css'
+import { cn } from '@/lib/cn'
 
 const NAV = [
   { to: routes.home, label: 'الرئيسية', end: true },
@@ -29,6 +30,13 @@ const ACCOUNT_MENU: { to: string; label: string; icon: IconName }[] = [
 ]
 
 type Panel = 'menu' | 'notif' | 'mobile' | null
+
+const iconBtn =
+  'relative flex size-10.5 items-center justify-center rounded-full border-0 bg-transparent text-ink transition-colors hover:bg-hover hover:text-ink'
+const dropdown =
+  'absolute top-20 z-60 flex animate-dd-in flex-col gap-0.5 rounded-[22px] border border-line bg-white p-2.5 shadow-pop max-sm:inset-x-0 max-sm:top-18 max-sm:w-auto'
+const menuItem =
+  'flex min-h-11 w-full items-center gap-3 rounded-xl border-0 bg-transparent px-3 text-start text-[15px] text-ink hover:bg-hover hover:text-ink'
 
 export function Header() {
   const { user, logout } = useAuth()
@@ -84,64 +92,108 @@ export function Header() {
   }
 
   return (
-    <div className={`site-header${scrolled ? ' is-scrolled' : ''}`} ref={rootRef}>
-      <header className="hdr-pill">
-        <Link to={routes.home} aria-label="الرئيسية" className="hdr-logo">
-          <img src="/assets/brand/logo-blue.webp" alt="الدكتور صالح عبد الكريم" width={102} height={46} />
+    // Floating white pill over the hero; the wrapper itself ignores clicks.
+    <div
+      className="pointer-events-none fixed inset-x-0 top-0 z-50 px-6 py-3.5 max-sm:px-4 max-sm:py-2.5"
+      ref={rootRef}
+    >
+      <header
+        className={cn(
+          'pointer-events-auto relative mx-auto flex h-17.5 max-w-site items-center gap-5 rounded-full border bg-white/96 ps-5 pe-2.5 transition-shadow duration-300',
+          'max-xl:justify-between max-sm:h-15.5 max-sm:gap-2 max-sm:ps-3.5 max-sm:pe-1.5',
+          scrolled
+            ? 'border-line shadow-[0_14px_34px_-20px_rgba(12,42,74,.45)] backdrop-blur-md'
+            : 'border-white/70 shadow-[0_18px_40px_-22px_rgba(5,20,40,.55)]',
+        )}
+      >
+        <Link to={routes.home} aria-label="الرئيسية" className="flex flex-none">
+          <img
+            src="/assets/brand/logo-blue.webp"
+            alt="الدكتور صالح عبد الكريم"
+            width={102}
+            height={46}
+            className="h-11.5 w-auto max-sm:h-9.5"
+          />
         </Link>
 
-        <nav aria-label="القائمة الرئيسية" className="hdr-nav">
+        <nav aria-label="القائمة الرئيسية" className="flex flex-1 justify-center gap-0.5 max-xl:hidden">
           {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.end} className="hdr-link">
+            <NavLink
+              key={n.to}
+              to={n.to}
+              end={n.end}
+              className={({ isActive }) =>
+                cn(
+                  'flex h-10.5 items-center rounded-full px-3.5 text-[15px] whitespace-nowrap transition-colors',
+                  isActive
+                    ? 'bg-navy px-4 font-bold text-white hover:text-white'
+                    : 'font-medium text-muted hover:bg-hover hover:text-ink',
+                )
+              }
+            >
               {n.label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="hdr-actions">
-          <Link to={routes.search} aria-label="بحث" className="hdr-icon">
+        <div className="flex flex-none items-center gap-1.5">
+          <Link to={routes.search} aria-label="بحث" className={iconBtn}>
             <Icon name="search" />
           </Link>
           <Link
             to={routes.cart}
             aria-label={cartCount ? `السلة، ${cartCount} عنصر` : 'السلة'}
-            className="hdr-icon"
+            className={iconBtn}
           >
             <Icon name="bag" />
-            {cartCount > 0 && <span className="hdr-badge">{cartCount}</span>}
+            {cartCount > 0 && (
+              <span className="absolute top-0.75 left-0.75 flex h-4.25 min-w-4.25 bg-gold items-center justify-center rounded-full border-2 border-white px-1 text-[11px] font-bold text-white">
+                {cartCount}
+              </span>
+            )}
           </Link>
 
           {user ? (
             <>
               <button
                 type="button"
-                className={`hdr-icon hdr-icon-btn${panel === 'notif' ? ' is-on' : ''}`}
+                className={cn(iconBtn, panel === 'notif' && 'bg-hover')}
                 aria-label="الإشعارات"
                 aria-expanded={panel === 'notif'}
                 onClick={() => toggle('notif')}
               >
                 <Icon name="bell" />
               </button>
-              <span className="hdr-sep" aria-hidden="true" />
+              <span className="mx-1.5 h-6 w-px bg-line" aria-hidden="true" />
               <button
                 type="button"
-                className={`hdr-user${panel === 'menu' ? ' is-on' : ''}`}
+                className={cn(
+                  'flex h-11 items-center gap-2.25 rounded-full border border-line bg-white ps-3 pe-1.25 text-ink hover:bg-hover',
+                  'max-sm:border-0 max-sm:px-1',
+                  panel === 'menu' && 'bg-hover',
+                )}
                 aria-label={`قائمة حسابي: ${user.fullName}`}
                 aria-expanded={panel === 'menu'}
                 onClick={() => toggle('menu')}
               >
-                <span className="hdr-avatar">{initial}</span>
-                <b>{user.firstName}</b>
-                <Icon name="chevDown" size={16} />
+                <Avatar letter={initial} />
+                <b className="text-sm max-sm:hidden">{user.firstName}</b>
+                <Icon name="chevDown" size={16} className="max-sm:hidden" />
               </button>
             </>
           ) : (
             <>
-              <span className="hdr-sep hide-sm" aria-hidden="true" />
-              <Link to={routes.login} className="hdr-login hide-sm">
+              <span className="mx-1.5 h-6 w-px bg-line max-sm:hidden" aria-hidden="true" />
+              <Link
+                to={routes.login}
+                className="flex h-10.5 items-center px-3 text-[15px] font-semibold text-ink max-sm:hidden"
+              >
                 دخول
               </Link>
-              <Link to={routes.register} className="hdr-cta hide-sm">
+              <Link
+                to={routes.register}
+                className="flex h-11 bg-gold items-center rounded-full px-5.5 text-[15px] font-extrabold whitespace-nowrap text-navy transition-[transform,box-shadow] duration-200 hover:-translate-y-px hover:text-navy hover:shadow-[0_12px_26px_-12px_rgba(232,163,61,.8)] max-sm:hidden"
+              >
                 {t('cta.startFree')}
               </Link>
             </>
@@ -149,7 +201,7 @@ export function Header() {
 
           <button
             type="button"
-            className="hdr-icon hdr-icon-btn hdr-burger"
+            className={cn(iconBtn, 'hidden max-xl:flex')}
             aria-label="القائمة"
             aria-expanded={panel === 'mobile'}
             onClick={() => toggle('mobile')}
@@ -159,28 +211,33 @@ export function Header() {
         </div>
 
         {panel === 'menu' && user && (
-          <div role="menu" className="hdr-dd hdr-dd-menu">
-            <div className="hdr-dd-head bg-navy">
-              <span className="hdr-avatar lg">{initial}</span>
-              <span className="hdr-dd-id">
-                <b>{user.fullName}</b>
-                <span>{user.email}</span>
+          <div role="menu" className={cn(dropdown, 'left-1.5 w-72.5')}>
+            <div className="mb-1 flex bg-navy items-center gap-3 rounded-2xl p-3">
+              <Avatar letter={initial} large />
+              <span className="flex min-w-0 flex-col">
+                <b className="text-white">{user.fullName}</b>
+                <span className="truncate text-xs text-on-dark-muted">{user.email}</span>
               </span>
             </div>
             {ACCOUNT_MENU.map((m) => (
-              <Link key={m.to} to={m.to} role="menuitem" className="hdr-mi">
+              <Link key={m.to} to={m.to} role="menuitem" className={menuItem}>
                 <Icon name={m.icon} size={18} />
                 {m.label}
               </Link>
             ))}
             {user.role === 'Admin' && (
-              <Link to={routes.admin} role="menuitem" className="hdr-mi">
+              <Link to={routes.admin} role="menuitem" className={menuItem}>
                 <Icon name="grid" size={18} />
                 لوحة التحكم
               </Link>
             )}
-            <span className="hdr-dd-sep" />
-            <button type="button" role="menuitem" className="hdr-mi danger" onClick={handleLogout}>
+            <span className="mx-2 my-1.5 h-px bg-divider" />
+            <button
+              type="button"
+              role="menuitem"
+              className={cn(menuItem, 'font-semibold text-danger hover:text-danger')}
+              onClick={handleLogout}
+            >
               <Icon name="logout" size={18} />
               تسجيل الخروج
             </button>
@@ -188,10 +245,10 @@ export function Header() {
         )}
 
         {panel === 'notif' && user && (
-          <div role="dialog" aria-label="الإشعارات" className="hdr-dd hdr-dd-notif">
-            <b className="hdr-dd-title">الإشعارات</b>
-            <div className="hdr-empty">
-              <span className="hdr-empty-icon">
+          <div role="dialog" aria-label="الإشعارات" className={cn(dropdown, 'left-27.5 w-95 p-3.5')}>
+            <b className="px-1.5 pt-1 pb-2.5 font-head text-lg text-ink">الإشعارات</b>
+            <div className="flex flex-col items-center gap-2.5 px-3 py-7 text-[15px] text-muted">
+              <span className="flex size-13 items-center justify-center rounded-2xl bg-surface-blue text-blue-600">
                 <Icon name="bell" size={22} />
               </span>
               مفيش إشعارات جديدة دلوقتي
@@ -201,21 +258,31 @@ export function Header() {
       </header>
 
       {panel === 'mobile' && (
-        <div className="hdr-mobile">
-          <nav aria-label="القائمة" className="hdr-mobile-nav">
+        <div className="pointer-events-auto mx-auto mt-2.5 max-w-site animate-dd-in rounded-card border border-line bg-white p-2.5 shadow-pop">
+          <nav aria-label="القائمة" className="flex flex-col">
             {NAV.map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.end} className="hdr-mobile-link">
+              <NavLink
+                key={n.to}
+                to={n.to}
+                end={n.end}
+                className={({ isActive }) =>
+                  cn(
+                    'flex min-h-13 items-center justify-between rounded-field px-3.5 font-semibold',
+                    isActive ? 'bg-surface-blue text-blue-600' : 'text-ink',
+                  )
+                }
+              >
                 {n.label}
                 <Icon name="chevLeft" size={18} />
               </NavLink>
             ))}
           </nav>
           {!user && (
-            <div className="hdr-mobile-auth">
-              <Link to={routes.login} className="btn btn-outline btn-block">
+            <div className="grid grid-cols-2 gap-2.5 px-1 pt-2.5 pb-1">
+              <Link to={routes.login} className={buttonClass({ variant: 'outline', block: true })}>
                 دخول
               </Link>
-              <Link to={routes.register} className="btn btn-gold btn-block">
+              <Link to={routes.register} className={buttonClass({ variant: 'gold', block: true })}>
                 {t('cta.startFree')}
               </Link>
             </div>
@@ -223,5 +290,18 @@ export function Header() {
         </div>
       )}
     </div>
+  )
+}
+
+function Avatar({ letter, large }: { letter: string; large?: boolean }) {
+  return (
+    <span
+      className={cn(
+        'flex flex-none bg-gold items-center justify-center rounded-full font-extrabold text-navy',
+        large ? 'size-11 text-lg' : 'size-8.5',
+      )}
+    >
+      {letter}
+    </span>
   )
 }

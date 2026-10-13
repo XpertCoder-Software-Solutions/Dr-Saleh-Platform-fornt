@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Icon, type IconName } from '@/components/ui/Icon'
 import { routes } from '@/app/routes'
-import './footer.css'
 
 const PLATFORM = [
   { to: routes.about, label: 'عن د. صالح' },
@@ -33,65 +32,92 @@ const CONTACT: { label: string; icon: IconName }[] = [
   { label: 'واتساب: [رقم واتساب]', icon: 'whatsapp' },
 ]
 
+const colTitle = 'mb-1 font-head text-[17px] text-white'
+const colLink = 'text-[15px] text-on-dark-muted hover:text-white'
+
 export function Footer() {
   const year = new Date().getFullYear()
   return (
-    <footer className="site-footer">
-      <div className="dots footer-dots" aria-hidden="true" />
-      <div className="container footer-grid">
-        <div className="footer-brand">
-          <img src="/assets/brand/logo-white.webp" alt="الدكتور صالح عبد الكريم" width={200} height={90} />
-          <p>منصة تعليمية في التربية الإيجابية والبناء النفسي للأطفال والمراهقين: دورات، كتب، واستشارات خاصة.</p>
-          <div className="footer-social">
+    <footer className="relative overflow-hidden bg-navy-deep pt-16 pb-7 text-on-dark-muted">
+      <div className="absolute inset-0 dots opacity-35" aria-hidden="true" />
+      <div className="relative mx-auto grid max-w-site grid-cols-[1.4fr_1fr_1fr_1.2fr] gap-10 px-6 max-lg:grid-cols-2 max-sm:grid-cols-1 max-sm:px-4">
+        <div className="flex flex-col gap-4.5 max-lg:col-span-full">
+          <img
+            src="/assets/brand/logo-white.webp"
+            alt="الدكتور صالح عبد الكريم"
+            width={200}
+            height={90}
+            className="w-50"
+          />
+          <p className="max-w-85 text-[15px] leading-loose">
+            منصة تعليمية في التربية الإيجابية والبناء النفسي للأطفال والمراهقين: دورات، كتب، واستشارات خاصة.
+          </p>
+          <div className="flex gap-2.5">
             {SOCIAL.map((s) => (
-              <a key={s.label} href={s.href} aria-label={s.label} className="glass">
+              <a
+                key={s.label}
+                href={s.href}
+                aria-label={s.label}
+                className="flex size-11 items-center justify-center rounded-xl text-white glass hover:bg-white/20 hover:text-white"
+              >
                 <Icon name={s.icon} size={18} />
               </a>
             ))}
           </div>
         </div>
 
-        <nav aria-label="المنصة" className="footer-col">
-          <b>المنصة</b>
+        <nav aria-label="المنصة" className="flex flex-col gap-3">
+          <b className={colTitle}>المنصة</b>
           {PLATFORM.map((l) => (
-            <Link key={l.to} to={l.to}>
+            <Link key={l.to} to={l.to} className={colLink}>
               {l.label}
             </Link>
           ))}
         </nav>
 
-        <nav aria-label="حسابي" className="footer-col">
-          <b>حسابي</b>
+        <nav aria-label="حسابي" className="flex flex-col gap-3">
+          <b className={colTitle}>حسابي</b>
           {ACCOUNT.map((l) => (
-            <Link key={l.to} to={l.to}>
+            <Link key={l.to} to={l.to} className={colLink}>
               {l.label}
             </Link>
           ))}
         </nav>
 
-        <div className="footer-col">
-          <b>تواصل معنا</b>
+        <div className="flex flex-col gap-3">
+          <b className={colTitle}>تواصل معنا</b>
           {CONTACT.map((c) => (
-            <span key={c.label} className="footer-contact">
-              <span className="glass">
+            <span key={c.label} className="flex items-center gap-2.5 text-[15px]">
+              <span className="flex size-8.5 flex-none items-center justify-center rounded-[10px] text-white glass">
                 <Icon name={c.icon} size={16} />
               </span>
               {c.label}
             </span>
           ))}
-          <Link to={routes.contact} className="footer-more">
+          <Link
+            to={routes.contact}
+            className="inline-flex items-center gap-1.5 font-bold text-gold-light hover:text-white"
+          >
             كل طرق التواصل <Icon name="arrowLeft" size={16} />
           </Link>
         </div>
       </div>
 
-      <div className="container footer-bottom">
+      <div className="relative mx-auto mt-11 flex max-w-site flex-wrap justify-between gap-3.5 border-t border-white/12 px-6 pt-5.5 text-sm max-sm:px-4">
         <span>© {year} منصة د. صالح عبد الكريم. جميع الحقوق محفوظة.</span>
-        <nav aria-label="روابط قانونية">
-          <Link to={routes.verifyCertificate}>التحقق من شهادة</Link>
-          <Link to={routes.terms}>الشروط والأحكام</Link>
-          <Link to={routes.refunds}>سياسة الاسترداد</Link>
-          <Link to={routes.privacy}>سياسة الخصوصية</Link>
+        <nav aria-label="روابط قانونية" className="flex flex-wrap gap-4.5">
+          <Link to={routes.verifyCertificate} className="text-on-dark-muted hover:text-white">
+            التحقق من شهادة
+          </Link>
+          <Link to={routes.terms} className="text-on-dark-muted hover:text-white">
+            الشروط والأحكام
+          </Link>
+          <Link to={routes.refunds} className="text-on-dark-muted hover:text-white">
+            سياسة الاسترداد
+          </Link>
+          <Link to={routes.privacy} className="text-on-dark-muted hover:text-white">
+            سياسة الخصوصية
+          </Link>
         </nav>
       </div>
     </footer>

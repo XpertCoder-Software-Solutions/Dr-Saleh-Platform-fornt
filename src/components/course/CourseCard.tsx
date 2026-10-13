@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 import type { CourseSummary } from '@/types/api'
 import { routes } from '@/app/routes'
 import { Icon } from '@/components/ui/Icon'
+import { cn } from '@/lib/cn'
 import { coursePrice, durationLabel, formatEGP, lessonsLabel } from '@/lib/format'
 import { CourseCover } from './CourseCover'
-import './course.css'
 
 const NEW_DAYS = 30
 // Captured once per page load; precise enough for a "new" badge.
@@ -26,12 +26,12 @@ export function CourseCard({ course, variant = 'home', wishlisted, onToggleWishl
   const category = course.category?.nameAr ?? null
 
   return (
-    <article className="ccard glow-card">
+    <article className="glow-card relative flex flex-col overflow-hidden rounded-card border border-line bg-white text-text">
       {/* Whole-card link sits under the wishlist button (no buttons nested inside <a>). */}
-      <Link to={routes.course(course.id)} className="ccard-link">
+      <Link to={routes.course(course.id)} className="absolute inset-0 z-1 rounded-[inherit]">
         <span className="sr-only">{course.titleAr}</span>
       </Link>
-      <div className="ccard-cover">
+      <div className="relative overflow-hidden rounded-t-card">
         <CourseCover
           seed={course.categoryId || course.id}
           word={category ?? course.titleAr}
@@ -44,7 +44,10 @@ export function CourseCard({ course, variant = 'home', wishlisted, onToggleWishl
         {onToggleWishlist && (
           <button
             type="button"
-            className={`ccard-heart${wishlisted ? ' is-on' : ''}`}
+            className={cn(
+              'absolute bottom-3.5 left-3.5 z-2 flex size-10 items-center justify-center rounded-full border-0 bg-white shadow-[0_8px_18px_-8px_rgba(5,20,40,.5)] transition-transform duration-200 hover:scale-108',
+              wishlisted ? 'text-danger-dot' : 'text-ink',
+            )}
             aria-pressed={wishlisted}
             aria-label={wishlisted ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
             onClick={() => onToggleWishlist(course.id)}
@@ -53,38 +56,55 @@ export function CourseCard({ course, variant = 'home', wishlisted, onToggleWishl
           </button>
         )}
       </div>
-      <div className={`ccard-body${catalog ? ' is-catalog' : ''}`}>
-        {catalog && category && <span className="ccard-cat">{category}</span>}
-        <h3 className="ccard-title">{course.titleAr}</h3>
-        <div className="ccard-meta">
+      <div
+        className={cn(
+          'flex flex-1 flex-col',
+          catalog ? 'gap-2.5 px-5 pt-4.5 pb-5' : 'gap-3.5 px-6 pt-5.5 pb-6',
+        )}
+      >
+        {catalog && category && <span className="text-[13px] font-bold text-blue-600">{category}</span>}
+        <h3 className={cn('leading-normal font-semibold', catalog ? 'text-lg' : 'text-[21px]')}>
+          {course.titleAr}
+        </h3>
+        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted">
           {!!course.lessonsCount && (
-            <span>
+            <span className="inline-flex items-center gap-1.5">
               <Icon name="video" size={16} />
               {lessonsLabel(course.lessonsCount)}
             </span>
           )}
           {!!course.totalDurationSeconds && (
-            <span>
+            <span className="inline-flex items-center gap-1.5">
               <Icon name="clock" size={16} />
               {durationLabel(course.totalDurationSeconds)}
             </span>
           )}
           {course.certificateEnabled && (
-            <span>
+            <span className="inline-flex items-center gap-1.5">
               <Icon name="award" size={16} />
               شهادة
             </span>
           )}
         </div>
-        <div className="ccard-foot">
-          <span className="ccard-price">
-            <span className="g-ink">{price.isFree ? 'مجانًا' : formatEGP(price.current)}</span>
-            {price.old !== null && <s>{formatEGP(price.old)}</s>}
+        <div className="mt-auto flex items-center justify-between border-t border-divider pt-3.5">
+          <span className="flex items-baseline gap-2">
+            <span className={cn('text-ink-grad font-bold', catalog ? 'text-xl' : 'text-[23px]')}>
+              {price.isFree ? 'مجانًا' : formatEGP(price.current)}
+            </span>
+            {price.old !== null && <s className="text-[15px] text-muted-2">{formatEGP(price.old)}</s>}
           </span>
           {course.ratingAverage != null && (
-            <span className="ccard-rating" aria-label={`التقييم ${course.ratingAverage} من 5`}>
-              <span aria-hidden="true">★</span> {course.ratingAverage}
-              {catalog && !!course.ratingCount && <small> ({course.ratingCount})</small>}
+            <span
+              className="text-[15px] font-semibold text-ink"
+              aria-label={`التقييم ${course.ratingAverage} من 5`}
+            >
+              <span aria-hidden="true" className="text-gold">
+                ★
+              </span>{' '}
+              {course.ratingAverage}
+              {catalog && !!course.ratingCount && (
+                <small className="text-[13px] font-medium text-muted-2"> ({course.ratingCount})</small>
+              )}
             </span>
           )}
         </div>
@@ -95,12 +115,15 @@ export function CourseCard({ course, variant = 'home', wishlisted, onToggleWishl
 
 export function CourseCardSkeleton() {
   return (
-    <div className="ccard" aria-hidden="true">
-      <div className="skeleton" style={{ height: 230, borderRadius: 0 }} />
-      <div className="ccard-body">
-        <div className="skeleton" style={{ height: 24, width: '80%' }} />
-        <div className="skeleton" style={{ height: 16, width: '60%' }} />
-        <div className="skeleton" style={{ height: 28, width: '40%', marginTop: 12 }} />
+    <div
+      className="flex flex-col overflow-hidden rounded-card border border-line bg-white"
+      aria-hidden="true"
+    >
+      <div className="h-57.5 skeleton rounded-none" />
+      <div className="flex flex-col gap-3.5 px-6 pt-5.5 pb-6">
+        <div className="h-6 w-4/5 skeleton" />
+        <div className="h-4 w-3/5 skeleton" />
+        <div className="mt-3 h-7 w-2/5 skeleton" />
       </div>
     </div>
   )

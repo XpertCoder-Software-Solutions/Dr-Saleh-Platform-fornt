@@ -5,7 +5,9 @@ import { authApi } from '@/api/endpoints'
 import { routes } from '@/app/routes'
 import { Spinner } from '@/components/ui/States'
 import { usePageTitle } from '@/lib/usePageTitle'
-import { AuthShell } from './AuthShell'
+import { AuthShell, AuthSwitch } from './AuthShell'
+import { buttonClass } from '@/components/ui/button'
+import { Alert } from '@/components/ui/States'
 import { OtpInput, PasswordField, TextField } from './fields'
 
 /** Two steps on one page: request a code by email, then set a new password with it. */
@@ -66,34 +68,30 @@ export function ForgotPasswordPage() {
         )
       }
     >
-      {error && (
-        <p className="alert alert-error" role="alert">
-          {error}
-        </p>
-      )}
-      {done && (
-        <p className="alert alert-success" role="status">
-          تم تغيير كلمة المرور. بنحوّلك لتسجيل الدخول…
-        </p>
-      )}
+      {error && <Alert tone="error">{error}</Alert>}
+      {done && <Alert tone="success">تم تغيير كلمة المرور. بنحوّلك لتسجيل الدخول…</Alert>}
       {step === 'email' ? (
-        <form className="auth-formbox" onSubmit={requestCode}>
+        <form className="flex flex-col gap-4.5" onSubmit={requestCode}>
           <TextField
             label="البريد الإلكتروني"
             type="email"
-            className="input-ltr"
+            ltr
             autoComplete="email"
             placeholder="name@example.com"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <button type="submit" className="btn btn-navy btn-lg btn-block" disabled={busy || !email}>
+          <button
+            type="submit"
+            className={buttonClass({ variant: 'navy', size: 'lg', block: true })}
+            disabled={busy || !email}
+          >
             {busy ? <Spinner /> : 'ابعت الكود'}
           </button>
         </form>
       ) : (
-        <form className="auth-formbox" onSubmit={reset}>
+        <form className="flex flex-col gap-4.5" onSubmit={reset}>
           <OtpInput value={otp} onChange={setOtp} />
           <PasswordField
             label="كلمة المرور الجديدة"
@@ -102,14 +100,18 @@ export function ForgotPasswordPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <button type="submit" className="btn btn-navy btn-lg btn-block" disabled={busy || otp.length !== 6 || done}>
+          <button
+            type="submit"
+            className={buttonClass({ variant: 'navy', size: 'lg', block: true })}
+            disabled={busy || otp.length !== 6 || done}
+          >
             {busy ? <Spinner /> : 'حفظ كلمة المرور'}
           </button>
         </form>
       )}
-      <p className="auth-switch">
+      <AuthSwitch>
         افتكرتها؟ <Link to={routes.login}>سجّل دخول</Link>
-      </p>
+      </AuthSwitch>
     </AuthShell>
   )
 }

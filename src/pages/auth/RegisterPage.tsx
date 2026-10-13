@@ -6,11 +6,20 @@ import { routes } from '@/app/routes'
 import { Spinner } from '@/components/ui/States'
 import { usePageTitle } from '@/lib/usePageTitle'
 import type { Gender } from '@/types/api'
-import { AuthShell } from './AuthShell'
+import { AuthShell, AuthSwitch } from './AuthShell'
+import { buttonClass } from '@/components/ui/button'
+import { Alert } from '@/components/ui/States'
 import { PasswordField, TextField } from './fields'
 import { pendingSignup } from './pending'
 
-type Errors = Partial<Record<'fullName' | 'email' | 'phoneNumber' | 'password' | 'confirm' | 'gender', string>>
+type Errors = Partial<
+  Record<'fullName' | 'email' | 'phoneNumber' | 'password' | 'confirm' | 'gender', string>
+>
+
+// Radio styled as a segmented button; state comes from the hidden input via :has().
+const segClass =
+  'flex min-h-13 cursor-pointer items-center justify-center gap-2 rounded-field border-[1.5px] border-line-2 bg-white font-semibold text-text-2 transition-colors ' +
+  'has-checked:border-blue-400 has-checked:bg-surface-blue has-checked:text-ink has-focus-visible:shadow-[0_0_0_4px_rgba(61,155,216,.25)]'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_RE = /^\+?[0-9\s-]{8,16}$/
@@ -71,7 +80,9 @@ export function RegisterPage() {
         referralCode: form.referralCode.trim().toUpperCase() || undefined,
       })
       pendingSignup.set({ email, password: form.password })
-      navigate(routes.verifyEmail, { state: { email, from: (location.state as { from?: string } | null)?.from } })
+      navigate(routes.verifyEmail, {
+        state: { email, from: (location.state as { from?: string } | null)?.from },
+      })
     } catch (err) {
       if (err instanceof ApiClientError && err.statusCode === 409) {
         setServerError('البريد الإلكتروني أو رقم الموبايل ده مسجّل قبل كده. جرّب تسجّل دخول.')
@@ -89,12 +100,8 @@ export function RegisterPage() {
 
   return (
     <AuthShell title="إنشاء حساب جديد" sub="حساب واحد لدوراتك وكتبك وشهاداتك.">
-      <form className="auth-formbox" onSubmit={onSubmit} noValidate>
-        {serverError && (
-          <p className="alert alert-error" role="alert">
-            {serverError}
-          </p>
-        )}
+      <form className="flex flex-col gap-4.5" onSubmit={onSubmit} noValidate>
+        {serverError && <Alert tone="error">{serverError}</Alert>}
         <TextField
           label="الاسم بالكامل"
           autoComplete="name"
@@ -104,28 +111,40 @@ export function RegisterPage() {
           required
         />
 
-        <fieldset className="form-field" style={{ border: 0, padding: 0, margin: 0 }}>
-          <legend className="form-label" style={{ marginBottom: 8 }}>
-            النوع
-          </legend>
-          <div className="seg">
-            <label>
-              <input type="radio" name="gender" value="Male" checked={male} onChange={set('gender')} />
+        <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
+          <legend className="mb-2 text-[15px] font-semibold text-ink">النوع</legend>
+          <div className="grid grid-cols-2 gap-2.5">
+            <label className={segClass}>
+              <input
+                type="radio"
+                name="gender"
+                value="Male"
+                checked={male}
+                onChange={set('gender')}
+                className="sr-only"
+              />
               ذكر
             </label>
-            <label>
-              <input type="radio" name="gender" value="Female" checked={female} onChange={set('gender')} />
+            <label className={segClass}>
+              <input
+                type="radio"
+                name="gender"
+                value="Female"
+                checked={female}
+                onChange={set('gender')}
+                className="sr-only"
+              />
               أنثى
             </label>
           </div>
-          {errors.gender && <span className="field-error">{errors.gender}</span>}
+          {errors.gender && <span className="text-sm text-danger">{errors.gender}</span>}
         </fieldset>
 
-        <div className="auth-row">
+        <div className="grid grid-cols-2 gap-3.5 max-[480px]:grid-cols-1">
           <TextField
             label="البريد الإلكتروني"
             type="email"
-            className="input-ltr"
+            ltr
             autoComplete="email"
             placeholder="name@example.com"
             value={form.email}
@@ -136,7 +155,7 @@ export function RegisterPage() {
           <TextField
             label="رقم الموبايل"
             type="tel"
-            className="input-ltr"
+            ltr
             autoComplete="tel"
             placeholder="+20 10 0000 0000"
             value={form.phoneNumber}
@@ -164,22 +183,29 @@ export function RegisterPage() {
         />
         <TextField
           label="كود الدعوة (اختياري)"
-          className="input-ltr"
+          ltr
           value={form.referralCode}
           onChange={set('referralCode')}
           autoCapitalize="characters"
         />
-        <p className="field-hint">
-          بإنشاء الحساب {female ? 'إنتي موافقة' : 'إنت موافق'} على <Link to={routes.terms}>الشروط والأحكام</Link> و
-          <Link to={routes.privacy}>سياسة الخصوصية</Link>.
+        <p className="text-[13px] text-muted">
+          بإنشاء الحساب {female ? 'إنتي موافقة' : 'إنت موافق'} على{' '}
+          <Link to={routes.terms}>الشروط والأحكام</Link> و<Link to={routes.privacy}>سياسة الخصوصية</Link>.
         </p>
-        <button type="submit" className="btn btn-gold btn-lg btn-block" disabled={busy}>
+        <button
+          type="submit"
+          className={buttonClass({ variant: 'gold', size: 'lg', block: true })}
+          disabled={busy}
+        >
           {busy ? <Spinner label="جاري إنشاء الحساب" /> : female ? 'ابدئي دلوقتي' : 'ابدأ دلوقتي'}
         </button>
       </form>
-      <p className="auth-switch">
-        عندك حساب؟ <Link to={routes.login} state={location.state}>سجّل دخول</Link>
-      </p>
+      <AuthSwitch>
+        عندك حساب؟{' '}
+        <Link to={routes.login} state={location.state}>
+          سجّل دخول
+        </Link>
+      </AuthSwitch>
     </AuthShell>
   )
 }

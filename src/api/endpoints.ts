@@ -32,8 +32,7 @@ export const authApi = {
     api.post<Record<string, never>>('/auth/verify-email', input),
   resendVerification: (email: string) =>
     api.post<Record<string, never>>('/auth/resend-email-verification', { email }),
-  forgotPassword: (email: string) =>
-    api.post<Record<string, never>>('/auth/forgot-password', { email }),
+  forgotPassword: (email: string) => api.post<Record<string, never>>('/auth/forgot-password', { email }),
   logout: () => api.post<Record<string, never>>('/auth/logout'),
 }
 

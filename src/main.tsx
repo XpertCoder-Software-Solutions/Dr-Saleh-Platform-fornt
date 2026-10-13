@@ -1,5 +1,4 @@
-// Global styles first so page and component CSS can override them.
-import '@/styles/global.css'
+import '@/styles/index.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'

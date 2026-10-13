@@ -5,7 +5,9 @@ import { useAuth } from '@/auth/hooks'
 import { routes } from '@/app/routes'
 import { Spinner } from '@/components/ui/States'
 import { usePageTitle } from '@/lib/usePageTitle'
-import { AuthShell } from './AuthShell'
+import { AuthShell, AuthSwitch } from './AuthShell'
+import { buttonClass } from '@/components/ui/button'
+import { Alert } from '@/components/ui/States'
 import { OtpInput } from './fields'
 import { pendingSignup } from './pending'
 
@@ -76,31 +78,32 @@ export function VerifyEmailPage() {
         </>
       }
     >
-      <form className="auth-formbox" onSubmit={onSubmit}>
-        {error && (
-          <p className="alert alert-error" role="alert">
-            {error}
-          </p>
-        )}
-        {notice && (
-          <p className="alert alert-success" role="status">
-            {notice}
-          </p>
-        )}
+      <form className="flex flex-col gap-4.5" onSubmit={onSubmit}>
+        {error && <Alert tone="error">{error}</Alert>}
+        {notice && <Alert tone="success">{notice}</Alert>}
         <OtpInput value={otp} onChange={setOtp} />
-        <button type="submit" className="btn btn-navy btn-lg btn-block" disabled={busy || otp.length !== 6}>
+        <button
+          type="submit"
+          className={buttonClass({ variant: 'navy', size: 'lg', block: true })}
+          disabled={busy || otp.length !== 6}
+        >
           {busy ? <Spinner label="جاري التفعيل" /> : 'تفعيل الحساب'}
         </button>
       </form>
-      <p className="auth-switch">
+      <AuthSwitch>
         موصلكش الكود؟{' '}
-        <button type="button" className="link-btn" disabled={wait > 0} onClick={resend}>
+        <button
+          type="button"
+          className="border-0 bg-transparent p-0 font-bold text-blue-500 disabled:cursor-default disabled:text-muted-2"
+          disabled={wait > 0}
+          onClick={resend}
+        >
           {wait > 0 ? `ابعته تاني بعد ${wait} ثانية` : 'ابعته تاني'}
         </button>
-      </p>
-      <p className="auth-switch">
+      </AuthSwitch>
+      <AuthSwitch>
         <Link to={routes.register}>غيّر البريد الإلكتروني</Link>
-      </p>
+      </AuthSwitch>
     </AuthShell>
   )
 }

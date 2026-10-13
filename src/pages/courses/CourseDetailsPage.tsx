@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, ApiClientError } from '@/api/client'
@@ -8,20 +8,30 @@ import { useAuth, useCopy } from '@/auth/hooks'
 import { routes } from '@/app/routes'
 import { CourseCover } from '@/components/course/CourseCover'
 import { CTABand } from '@/components/layout/CTABand'
+import { Breadcrumbs, HeroWave } from '@/components/layout/PageHero'
 import { Icon, type IconName } from '@/components/ui/Icon'
-import { EmptyState, ErrorState, Spinner } from '@/components/ui/States'
+import { buttonClass, inputClass, innerClass, sectionClass } from '@/components/ui/button'
+import { Alert, EmptyState, ErrorState, Spinner } from '@/components/ui/States'
+import { cn } from '@/lib/cn'
 import { coursePrice, durationLabel, formatDate, formatEGP, lessonsLabel } from '@/lib/format'
 import { usePageTitle } from '@/lib/usePageTitle'
 import type { Course, CourseReview, CourseSection } from '@/types/api'
 import { NotFoundPage } from '@/pages/NotFoundPage'
-import './course-details.css'
 
 type Tab = 'info' | 'content' | 'reviews'
+
+const stateWrap = 'flex min-h-[70vh] items-center justify-center px-6 pt-34.5 pb-15 text-blue-600'
 
 export function CourseDetailsPage() {
   const { id = '' } = useParams()
   const isUuid = /^[0-9a-f-]{36}$/i.test(id)
-  const { data: course, isLoading, isError, error, refetch } = useQuery({
+  const {
+    data: course,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['courses', 'detail', id],
     queryFn: () => coursesApi.byId(id),
     enabled: isUuid,
@@ -33,21 +43,37 @@ export function CourseDetailsPage() {
 
   if (isError) {
     return (
-      <div className="cd-state">
-        <ErrorState onRetry={() => refetch()} />
+      <div className={stateWrap}>
+        <div className="w-full max-w-140">
+          <ErrorState onRetry={() => refetch()} />
+        </div>
       </div>
     )
   }
 
   if (isLoading || !course) {
     return (
-      <div className="cd-state">
+      <div className={stateWrap}>
         <Spinner />
       </div>
     )
   }
 
   return <CourseDetails course={course} />
+}
+
+function Card({ id, children, className }: { id?: string; children: ReactNode; className?: string }) {
+  return (
+    <article
+      id={id}
+      className={cn(
+        'flex scroll-mt-44 flex-col gap-4 rounded-card border border-line bg-white p-7 max-sm:p-5',
+        className,
+      )}
+    >
+      {children}
+    </article>
+  )
 }
 
 function CourseDetails({ course }: { course: Course }) {
@@ -60,7 +86,9 @@ function CourseDetails({ course }: { course: Course }) {
         .sort((a, b) => a.displayOrder - b.displayOrder)
         .map((s) => ({
           ...s,
-          lessons: [...(s.lessons ?? [])].filter((l) => l.isActive).sort((a, b) => a.displayOrder - b.displayOrder),
+          lessons: [...(s.lessons ?? [])]
+            .filter((l) => l.isActive)
+            .sort((a, b) => a.displayOrder - b.displayOrder),
         })),
     [course.sections],
   )
@@ -84,28 +112,35 @@ function CourseDetails({ course }: { course: Course }) {
 
   return (
     <>
-      <section className="cd-hero bg-navy">
-        <div className="dots cd-hero-dots" aria-hidden="true" />
-        <div className="cd-hero-inner">
-          <nav aria-label="مسار الصفحة" className="phero-crumbs">
-            <Link to={routes.home}>الرئيسية</Link> / <Link to={routes.courses}>الدورات</Link> /{' '}
-            <span aria-current="page">{course.titleAr}</span>
-          </nav>
+      <section className="relative bg-navy overflow-hidden px-6 pt-33.5 pb-37.5 text-white max-lg:pb-22.5 max-sm:px-4">
+        <div className="absolute inset-0 dots opacity-50" aria-hidden="true" />
+        {/* leaves room for the buy card on the left at desktop widths */}
+        <div className="relative mx-auto flex max-w-site flex-col gap-4 lg:*:max-w-[calc(100%-320px)]">
+          <Breadcrumbs
+            crumbs={[
+              { label: 'الرئيسية', to: routes.home },
+              { label: 'الدورات', to: routes.courses },
+              { label: course.titleAr },
+            ]}
+          />
           {category && (
-            <span className="glass cd-chip">
-              <span className="pulse hero-dot-sm" />
+            <span className="inline-flex items-center gap-2 self-start rounded-full px-3.5 py-1.5 text-sm font-bold glass">
+              <span className="size-2 animate-pulse-ring rounded-full bg-gold-light" />
               {course.isFeatured ? 'الأكثر طلبًا · ' : ''}
               {category}
             </span>
           )}
-          <h1 className="cd-title rise">
-            {titleHead} <span className="g-text">{titleTail.join(' ')}</span>
+          <h1 className="animate-rise text-[clamp(32px,5vw,52px)] leading-tight text-white">
+            {titleHead} <span className="text-sheen">{titleTail.join(' ')}</span>
           </h1>
-          <p className="cd-lead rise d1">{course.shortDescriptionAr}</p>
-          <div className="cd-meta rise d2">
+          <p className="max-w-180 animate-rise text-lg leading-[1.85] text-on-dark [animation-delay:.1s]">
+            {course.shortDescriptionAr}
+          </p>
+          <div className="flex animate-rise flex-wrap gap-x-5.5 gap-y-2.5 text-[15px] text-on-dark-muted [animation-delay:.2s] *:inline-flex *:items-center *:gap-1.5">
             {course.ratingAverage != null && (
               <span>
-                <b>{course.ratingAverage}</b> <span className="stars">★★★★★</span> ({course.ratingCount} تقييم)
+                <b className="text-lg text-white">{course.ratingAverage}</b>
+                <span className="tracking-[1px] text-gold-light">★★★★★</span> ({course.ratingCount} تقييم)
               </span>
             )}
             {lessonsCount > 0 && (
@@ -122,37 +157,50 @@ function CourseDetails({ course }: { course: Course }) {
               <Icon name="calendar" size={16} /> آخر تحديث: {formatDate(course.updatedAt)}
             </span>
           </div>
-          <div className="cd-author rise d3">
-            <span className="cd-author-img">
-              <img src="/assets/brand/saleh-cutout.webp" alt="" />
+          <div className="flex animate-rise items-center gap-3 [animation-delay:.3s]">
+            <span className="size-13 flex-none bg-gold overflow-hidden rounded-full border-2 border-white/60">
+              <img
+                src="/assets/brand/saleh-cutout.webp"
+                alt=""
+                className="h-[130%] w-full object-cover object-top"
+              />
             </span>
-            <span>
+            <span className="flex flex-col">
               <b>د. صالح عبد الكريم</b>
-              <small>المستشار النفسي والتربوي</small>
+              <small className="text-on-dark-muted">المستشار النفسي والتربوي</small>
             </span>
           </div>
         </div>
-        <svg className="phero-wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
-          <path className="wave-path" d="M0 40 C 360 100 1080 -20 1440 40 L1440 80 L0 80 Z" fill="#F6F8FB" />
-        </svg>
+        <HeroWave />
       </section>
 
-      <section className="section cd-body">
-        <div className="inner cd-layout">
-          <div className="cd-main">
-            <div role="tablist" aria-label="أقسام الدورة" className="cd-tabs">
+      <section className={cn(sectionClass, 'relative')}>
+        <div className={cn(innerClass, 'grid grid-cols-[1fr_360px] items-start gap-7 max-lg:grid-cols-1')}>
+          <div className="flex min-w-0 flex-col gap-5">
+            <div
+              role="tablist"
+              aria-label="أقسام الدورة"
+              className="sticky top-26 z-5 grid grid-cols-3 gap-1.5 rounded-[18px] border border-line bg-white p-1.5"
+            >
               {tabs.map((t) => (
-                <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => goTo(t.id)}>
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === t.id}
+                  onClick={() => goTo(t.id)}
+                  className="min-h-11.5 rounded-xl border-0 bg-transparent font-bold text-muted aria-selected:bg-navy aria-selected:text-white max-sm:text-[13px]"
+                >
                   {t.label}
                 </button>
               ))}
             </div>
 
-            <article id="cd-info" className="card cd-card">
-              <h2>عن الدورة</h2>
-              <div className="cd-desc">
+            <Card id="cd-info">
+              <h2 className="text-[26px]">عن الدورة</h2>
+              <div className="flex flex-col gap-3 leading-[1.95] text-text-2">
                 {(course.descriptionAr || course.shortDescriptionAr)
-                  .split(/\n{1,}/)
+                  .split(/\n+/)
                   .filter(Boolean)
                   .map((p, i) => (
                     <p key={i}>{p}</p>
@@ -160,37 +208,54 @@ function CourseDetails({ course }: { course: Course }) {
               </div>
               {course.certificateEnabled && (
                 <>
-                  <h3>نتائج الدورة</h3>
-                  <p className="cd-muted">
-                    تحصل على شهادة معتمدة من المنصة بعد إتمام كل محتوى الدورة، تقدر تشاركها وتتحقق منها برقمها.
+                  <h3 className="mt-1.5 text-[19px]">نتائج الدورة</h3>
+                  <p className="text-[15px] leading-[1.8] text-muted">
+                    تحصل على شهادة معتمدة من المنصة بعد إتمام كل محتوى الدورة، تقدر تشاركها وتتحقق منها
+                    برقمها.
                   </p>
                 </>
               )}
-            </article>
+            </Card>
 
-            <article id="cd-content" className="card cd-card">
-              <div className="cd-card-head">
-                <h2>محتوى الدورة</h2>
-                <span className="cd-muted">
+            <Card id="cd-content">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-[26px]">محتوى الدورة</h2>
+                <span className="text-[15px] text-muted">
                   {sections.length} أقسام · {lessonsLabel(lessonsCount)}
                   {seconds > 0 && <> · {durationLabel(seconds)}</>}
                 </span>
               </div>
               {sections.length === 0 ? (
-                <EmptyState compact icon="list" title="المحتوى بيتجهّز" body="الدروس هتظهر هنا أول ما تنزل." />
+                <EmptyState
+                  compact
+                  icon="list"
+                  title="المحتوى بيتجهّز"
+                  body="الدروس هتظهر هنا أول ما تنزل."
+                />
               ) : (
-                <Curriculum sections={sections} onPreview={course.promoVideoUrl ? () => setShowPromo(true) : undefined} />
+                <Curriculum
+                  sections={sections}
+                  onPreview={course.promoVideoUrl ? () => setShowPromo(true) : undefined}
+                />
               )}
-            </article>
+            </Card>
 
             <Reviews course={course} />
           </div>
 
-          <BuyCard course={course} lessonsCount={lessonsCount} seconds={seconds} onPreview={() => setShowPromo(true)} />
+          <BuyCard
+            course={course}
+            lessonsCount={lessonsCount}
+            seconds={seconds}
+            onPreview={() => setShowPromo(true)}
+          />
         </div>
       </section>
 
-      <CTABand title="ابنك يستاهل بداية صح" body="لو محتار تبدأ بأنهي دورة، احكيلنا عن ابنك ونرشّحلك المسار المناسب." />
+      <CTABand
+        title="ابنك يستاهل بداية صح"
+        body="لو محتار تبدأ بأنهي دورة، احكيلنا عن ابنك ونرشّحلك المسار المناسب."
+      />
 
       {showPromo && course.promoVideoUrl && (
         <PromoModal url={course.promoVideoUrl} title={course.titleAr} onClose={() => setShowPromo(false)} />
@@ -218,38 +283,61 @@ function Curriculum({
     })
 
   return (
-    <div className="cd-sections">
+    <div className="flex flex-col gap-3">
       {sections.map((s) => {
         const isOpen = open.has(s.id)
         const secs = s.lessons.reduce((n, l) => n + (l.videoDurationSeconds ?? 0), 0)
         return (
-          <div key={s.id} className={`cd-section${isOpen ? ' is-open' : ''}`}>
-            <button type="button" className="cd-section-head" aria-expanded={isOpen} onClick={() => toggle(s.id)}>
-              <span>
-                <b>{s.titleAr}</b>
-                <small>
+          <div key={s.id} className="overflow-hidden rounded-[18px] border border-line">
+            <button
+              type="button"
+              aria-expanded={isOpen}
+              onClick={() => toggle(s.id)}
+              className="flex w-full items-center justify-between gap-3 border-0 bg-white px-4 py-3.5 text-start aria-expanded:bg-surface"
+            >
+              <span className="flex flex-col">
+                <b className="text-ink">{s.titleAr}</b>
+                <small className="text-[13px] text-muted">
                   {lessonsLabel(s.lessons.length)}
                   {secs > 0 && <> · {durationLabel(secs)}</>}
                 </small>
               </span>
-              <span className="cd-toggle" aria-hidden="true">
+              <span
+                className="flex size-7.5 flex-none items-center justify-center rounded-full border border-line bg-white font-bold text-ink"
+                aria-hidden="true"
+              >
                 {isOpen ? '−' : '+'}
               </span>
             </button>
             {isOpen && (
-              <ul className="cd-lessons">
+              <ul className="px-4 pt-1 pb-2">
                 {s.lessons.map((l) => (
-                  <li key={l.id}>
-                    <span className="cd-lesson-icon">
-                      <Icon name={l.lessonType === 'PDF' ? 'file' : 'play'} size={14} filled={l.lessonType !== 'PDF'} />
+                  <li
+                    key={l.id}
+                    className="flex min-h-12.5 items-center gap-2.5 border-b border-divider text-[15px] last:border-b-0"
+                  >
+                    <span className="flex size-7 flex-none items-center justify-center rounded-lg bg-surface-blue text-blue-600">
+                      <Icon
+                        name={l.lessonType === 'PDF' ? 'file' : 'play'}
+                        size={14}
+                        filled={l.lessonType !== 'PDF'}
+                      />
                     </span>
-                    <span className="cd-lesson-title">{l.titleAr}</span>
+                    <span className="flex-1 text-ink">{l.titleAr}</span>
                     {l.isPreview && onPreview && (
-                      <button type="button" className="cd-preview" onClick={onPreview}>
+                      <button
+                        type="button"
+                        className="border-0 bg-transparent text-[13px] font-bold text-blue-500"
+                        onClick={onPreview}
+                      >
                         معاينة مجانية
                       </button>
                     )}
-                    {!!l.videoDurationSeconds && <span className="cd-lesson-time">{clock(l.videoDurationSeconds)}</span>}
+                    {!!l.videoDurationSeconds && (
+                      <span className="text-[13px] text-muted tabular-nums" dir="ltr">
+                        {clock(l.videoDurationSeconds)}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -296,11 +384,14 @@ function BuyCard({
   const isOwned = (owned.data ?? []).some((c) => c.courseId === course.id)
 
   const price = coursePrice(course)
-  const usd = {
-    current: course.discountPriceUSD != null && course.discountPriceUSD < course.priceUSD ? course.discountPriceUSD : course.priceUSD,
-    old: course.discountPriceUSD != null && course.discountPriceUSD < course.priceUSD ? course.priceUSD : null,
-  }
-  const shown = currency === 'EGP' ? { current: price.current, old: price.old } : usd
+  const usdDiscounted = course.discountPriceUSD != null && course.discountPriceUSD < course.priceUSD
+  const shown =
+    currency === 'EGP'
+      ? { current: price.current, old: price.old }
+      : {
+          current: usdDiscounted ? course.discountPriceUSD! : course.priceUSD,
+          old: usdDiscounted ? course.priceUSD : null,
+        }
   const fmt = (n: number) => (currency === 'EGP' ? formatEGP(n) : `$${n}`)
 
   const addToCart = useMutation({
@@ -327,16 +418,24 @@ function BuyCard({
   }
 
   const includes: { icon: IconName; text: string; show: boolean }[] = [
-    { icon: 'video', text: `${seconds ? durationLabel(seconds) + ' فيديو في ' : ''}${lessonsLabel(lessonsCount)}`, show: lessonsCount > 0 },
+    {
+      icon: 'video',
+      text: `${seconds ? durationLabel(seconds) + ' فيديو في ' : ''}${lessonsLabel(lessonsCount)}`,
+      show: lessonsCount > 0,
+    },
     { icon: 'file', text: 'موارد وملفات PDF قابلة للتنزيل', show: true },
     { icon: 'refresh', text: 'تتبّع التقدم وكمّل من حيث وقفت', show: true },
     { icon: 'phone', text: 'الوصول من الموبايل ومدى الحياة', show: true },
     { icon: 'award', text: 'شهادة قابلة للمشاركة', show: Boolean(course.certificateEnabled) },
   ]
+  const wished = wishlist.has(course.id)
 
   return (
-    <aside className="cd-buy" aria-label="الاشتراك في الدورة">
-      <div className="cd-buy-cover">
+    <aside
+      aria-label="الاشتراك في الدورة"
+      className="sticky top-26 -mt-65 flex flex-col gap-4 rounded-[28px] border border-line bg-white px-6 pt-3.5 pb-5.5 shadow-[0_30px_60px_-36px_rgba(12,42,74,.5)] max-lg:static max-lg:order-first max-lg:mt-0"
+    >
+      <div className="relative -mx-2.5 overflow-hidden rounded-tile">
         <CourseCover
           seed={course.categoryId || course.id}
           word={course.category?.nameAr ?? course.titleAr}
@@ -347,49 +446,83 @@ function BuyCard({
           wordSize={24}
         />
         {course.promoVideoUrl && (
-          <button type="button" className="cd-play" aria-label="شغّل فيديو المعاينة" onClick={onPreview}>
+          <button
+            type="button"
+            aria-label="شغّل فيديو المعاينة"
+            onClick={onPreview}
+            className="absolute top-1/2 left-1/2 flex size-18 -translate-1/2 items-center justify-center rounded-full border-0 bg-white text-navy shadow-[0_16px_34px_-12px_rgba(5,20,40,.6)] transition-transform duration-250 hover:scale-108"
+          >
             <Icon name="play" size={26} filled />
           </button>
         )}
       </div>
 
       {isOwned ? (
-        <div className="cd-owned">
-          <span className="alert alert-success">الدورة دي في حسابك بالفعل.</span>
-          <Link to={routes.myCourses} className="btn btn-gold btn-lg btn-block">
+        <div className="flex flex-col gap-3">
+          <Alert tone="success">الدورة دي في حسابك بالفعل.</Alert>
+          <Link to={routes.myCourses} className={buttonClass({ variant: 'gold', size: 'lg', block: true })}>
             {t('cta.continue')}
           </Link>
         </div>
       ) : (
         <>
-          <div className="cd-price">
-            <b>{price.isFree && currency === 'EGP' ? 'مجانًا' : fmt(shown.current)}</b>
-            {shown.old != null && <s>{fmt(shown.old)}</s>}
-            {price.discountPercent > 0 && <span className="cd-off">خصم {price.discountPercent}%</span>}
+          <div className="flex flex-wrap items-baseline gap-2.5">
+            <b className="font-head text-[34px] text-ink">
+              {price.isFree && currency === 'EGP' ? 'مجانًا' : fmt(shown.current)}
+            </b>
+            {shown.old != null && <s className="text-muted-2">{fmt(shown.old)}</s>}
+            {price.discountPercent > 0 && (
+              <span className="rounded-full bg-gold-soft px-2.5 py-1 text-[13px] font-bold text-gold-ink">
+                خصم {price.discountPercent}%
+              </span>
+            )}
           </div>
-          <div className="cd-currency" role="radiogroup" aria-label="العملة">
-            <button type="button" role="radio" aria-checked={currency === 'EGP'} onClick={() => setCurrency('EGP')}>
-              جنيه مصري
-            </button>
-            <button type="button" role="radio" aria-checked={currency === 'USD'} onClick={() => setCurrency('USD')}>
-              دولار أمريكي
-            </button>
+          <div
+            className="grid grid-cols-2 rounded-[14px] bg-surface p-1"
+            role="radiogroup"
+            aria-label="العملة"
+          >
+            {(['EGP', 'USD'] as const).map((c) => (
+              <button
+                key={c}
+                type="button"
+                role="radio"
+                aria-checked={currency === c}
+                onClick={() => setCurrency(c)}
+                className="min-h-10.5 rounded-[10px] border-0 bg-transparent font-bold text-muted aria-checked:bg-white aria-checked:text-ink aria-checked:shadow-[0_4px_12px_-6px_rgba(12,42,74,.3)]"
+              >
+                {c === 'EGP' ? 'جنيه مصري' : 'دولار أمريكي'}
+              </button>
+            ))}
           </div>
-          {error && <p className="alert alert-error">{error}</p>}
-          <button type="button" className="btn btn-gold btn-lg btn-block" disabled={addToCart.isPending} onClick={() => buy(true)}>
+          {error && <Alert tone="error">{error}</Alert>}
+          <button
+            type="button"
+            className={buttonClass({ variant: 'gold', size: 'lg', block: true })}
+            disabled={addToCart.isPending}
+            onClick={() => buy(true)}
+          >
             {addToCart.isPending ? <Spinner /> : 'اشتري الآن'}
           </button>
-          <div className="cd-buy-row">
+          <div className="flex gap-2.5">
             <button
               type="button"
-              className={`btn btn-outline cd-heart${wishlist.has(course.id) ? ' is-on' : ''}`}
-              aria-pressed={wishlist.has(course.id)}
-              aria-label={wishlist.has(course.id) ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
+              className={buttonClass({
+                variant: 'outline',
+                className: cn('w-13 flex-none px-0', wished && 'text-danger-dot hover:text-danger-dot'),
+              })}
+              aria-pressed={wished}
+              aria-label={wished ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
               onClick={() => wishlist.toggle(course.id)}
             >
-              <Icon name="heart" size={18} filled={wishlist.has(course.id)} />
+              <Icon name="heart" size={18} filled={wished} />
             </button>
-            <button type="button" className="btn btn-outline cd-grow" disabled={addToCart.isPending} onClick={() => buy(false)}>
+            <button
+              type="button"
+              className={buttonClass({ variant: 'outline', className: 'flex-1' })}
+              disabled={addToCart.isPending}
+              onClick={() => buy(false)}
+            >
               {addToCart.isSuccess ? (
                 <>
                   <Icon name="check" size={18} /> اتضافت للسلة
@@ -399,7 +532,10 @@ function BuyCard({
               )}
             </button>
           </div>
-          <div className="cd-pay" aria-label="طرق الدفع">
+          <div
+            className="flex flex-wrap items-center justify-center gap-3 *:h-5.5 *:w-auto *:object-contain"
+            aria-label="طرق الدفع"
+          >
             <img src="/assets/payments/apple-pay.png" alt="Apple Pay" />
             <img src="/assets/payments/visa.svg" alt="Visa" />
             <img src="/assets/payments/mastercard.png" alt="Mastercard" />
@@ -409,14 +545,14 @@ function BuyCard({
         </>
       )}
 
-      <div className="cd-includes">
-        <b>الدورة تتضمن:</b>
-        <ul>
+      <div className="flex flex-col gap-3 border-t border-divider pt-4">
+        <b className="text-ink">الدورة تتضمن:</b>
+        <ul className="flex flex-col gap-2.5 text-[15px] text-text-2">
           {includes
             .filter((i) => i.show)
             .map((i) => (
-              <li key={i.text}>
-                <span>
+              <li key={i.text} className="flex items-center gap-2.5">
+                <span className="flex size-7.5 flex-none items-center justify-center rounded-[9px] bg-surface-blue text-blue-600">
                   <Icon name={i.icon} size={16} />
                 </span>
                 {i.text}
@@ -430,6 +566,15 @@ function BuyCard({
 
 /* ---------------- reviews ---------------- */
 
+function Stars({ value, className }: { value: number; className?: string }) {
+  return (
+    <span className={cn('tracking-[1px] text-gold', className)} aria-label={`${value} من 5`}>
+      {'★'.repeat(value)}
+      <span className="text-line-2">{'★'.repeat(5 - value)}</span>
+    </span>
+  )
+}
+
 function Reviews({ course }: { course: Course }) {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -440,43 +585,50 @@ function Reviews({ course }: { course: Course }) {
   })
   const reviews = data?.reviews ?? []
   const total = data?.pagination.total ?? 0
-  const avg = course.ratingAverage ?? (reviews.length ? reviews.reduce((n, r) => n + r.rating, 0) / reviews.length : 0)
+  const avg =
+    course.ratingAverage ?? (reviews.length ? reviews.reduce((n, r) => n + r.rating, 0) / reviews.length : 0)
   const dist = [5, 4, 3, 2, 1].map((star) => ({
     star,
-    pct: reviews.length ? Math.round((reviews.filter((r) => r.rating === star).length / reviews.length) * 100) : 0,
+    pct: reviews.length
+      ? Math.round((reviews.filter((r) => r.rating === star).length / reviews.length) * 100)
+      : 0,
   }))
 
   return (
-    <article id="cd-reviews" className="card cd-card">
-      <h2>التقييمات</h2>
+    <Card id="cd-reviews">
+      <h2 className="text-[26px]">التقييمات</h2>
       {isError ? (
         <ErrorState compact onRetry={() => refetch()} />
       ) : isLoading ? (
         <Spinner />
       ) : (
         <>
-          <div className="cd-rating">
-            <div className="cd-rating-big">
-              <b>{total ? avg.toFixed(1) : '—'}</b>
-              <span className="stars">★★★★★</span>
-              <small>{total} تقييم</small>
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex flex-col items-center gap-1 rounded-[18px] bg-surface px-6.5 py-4.5">
+              <b className="font-head text-[44px] leading-none text-ink">{total ? avg.toFixed(1) : '—'}</b>
+              <span className="tracking-[1px] text-gold">★★★★★</span>
+              <small className="text-muted">{total} تقييم</small>
             </div>
-            <div className="cd-bars">
+            <div className="flex flex-[1_1_240px] flex-col gap-1.5">
               {dist.map((d) => (
-                <div key={d.star} className="cd-bar">
+                <div key={d.star} className="flex items-center gap-2 text-[13px] text-muted">
                   <span>{d.star}</span>
-                  <span className="stars">★</span>
-                  <span className="cd-bar-track">
-                    <span style={{ width: `${d.pct}%` }} />
+                  <span className="text-gold">★</span>
+                  <span className="h-1.75 flex-1 overflow-hidden rounded-full bg-divider">
+                    <span className="block h-full bg-gold rounded-full" style={{ width: `${d.pct}%` }} />
                   </span>
-                  <span className="cd-bar-pct">{d.pct}%</span>
+                  <span className="w-9 tabular-nums">{d.pct}%</span>
                 </div>
               ))}
             </div>
             <button
               type="button"
-              className="btn btn-navy"
-              onClick={() => (user ? setWriting((w) => !w) : navigate(routes.login, { state: { from: routes.course(course.id) } }))}
+              className={buttonClass({ variant: 'navy' })}
+              onClick={() =>
+                user
+                  ? setWriting((w) => !w)
+                  : navigate(routes.login, { state: { from: routes.course(course.id) } })
+              }
             >
               اكتب تقييم
             </button>
@@ -485,9 +637,9 @@ function Reviews({ course }: { course: Course }) {
           {writing && <ReviewForm courseId={course.id} onDone={() => setWriting(false)} />}
 
           {reviews.length === 0 ? (
-            <p className="cd-muted cd-no-reviews">لسه مفيش تقييمات للدورة دي.</p>
+            <p className="py-2 text-[15px] text-muted">لسه مفيش تقييمات للدورة دي.</p>
           ) : (
-            <ul className="cd-review-list">
+            <ul>
               {reviews.slice(0, 6).map((r) => (
                 <ReviewItem key={r.id} review={r} />
               ))}
@@ -495,28 +647,28 @@ function Reviews({ course }: { course: Course }) {
           )}
         </>
       )}
-    </article>
+    </Card>
   )
 }
 
 function ReviewItem({ review }: { review: CourseReview }) {
   const name = review.user?.fullName ?? 'متدرب'
   return (
-    <li className="cd-review">
-      <span className="cd-review-av" aria-hidden="true">
+    <li className="flex gap-3.5 border-t border-divider py-4.5">
+      <span
+        className="flex size-11 flex-none items-center justify-center rounded-full bg-linear-135 from-[#cfe3f3] to-[#7cc0ec] font-extrabold text-navy"
+        aria-hidden="true"
+      >
         {name.charAt(0)}
       </span>
       <div>
-        <div className="cd-review-head">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <b>{name}</b>
-          <span className="stars" aria-label={`${review.rating} من 5`}>
-            {'★'.repeat(review.rating)}
-            <span className="stars-off">{'★'.repeat(5 - review.rating)}</span>
-          </span>
-          <small>{formatDate(review.createdAt)}</small>
+          <Stars value={review.rating} />
+          <small className="text-muted-2">{formatDate(review.createdAt)}</small>
         </div>
-        {review.title && <b className="cd-review-title">{review.title}</b>}
-        {review.comment && <p>{review.comment}</p>}
+        {review.title && <b className="mt-1.5 block text-ink">{review.title}</b>}
+        {review.comment && <p className="mt-1.5 leading-[1.85] text-text-2">{review.comment}</p>}
       </div>
     </li>
   )
@@ -527,7 +679,8 @@ function ReviewForm({ courseId, onDone }: { courseId: string; onDone: () => void
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
   const mutation = useMutation({
-    mutationFn: () => api.post(`/courses/${courseId}/reviews`, { rating, comment: comment.trim() || undefined }),
+    mutationFn: () =>
+      api.post(`/courses/${courseId}/reviews`, { rating, comment: comment.trim() || undefined }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses', 'reviews', courseId] })
       queryClient.invalidateQueries({ queryKey: ['courses', 'detail', courseId] })
@@ -541,24 +694,38 @@ function ReviewForm({ courseId, onDone }: { courseId: string; onDone: () => void
   }
 
   return (
-    <form className="cd-review-form" onSubmit={submit}>
-      <div className="cd-stars-input" role="radiogroup" aria-label="التقييم">
+    <form className="flex flex-col gap-3.5 rounded-[18px] bg-surface p-4.5" onSubmit={submit}>
+      <div className="flex gap-1" role="radiogroup" aria-label="التقييم">
         {[1, 2, 3, 4, 5].map((n) => (
-          <button key={n} type="button" role="radio" aria-checked={rating === n} aria-label={`${n} نجوم`} onClick={() => setRating(n)}>
+          <button
+            key={n}
+            type="button"
+            role="radio"
+            aria-checked={rating === n}
+            aria-label={`${n} نجوم`}
+            onClick={() => setRating(n)}
+            className="border-0 bg-transparent p-0.5 text-gold"
+          >
             <Icon name="star" size={26} filled={n <= rating} />
           </button>
         ))}
       </div>
-      <label className="form-field">
-        <span className="form-label">رأيك في الدورة (اختياري)</span>
-        <textarea className="input" rows={3} value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1000} />
+      <label className="flex flex-col gap-2">
+        <span className="text-[15px] font-semibold text-ink">رأيك في الدورة (اختياري)</span>
+        <textarea
+          className={cn(inputClass, 'min-h-24 resize-y')}
+          rows={3}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          maxLength={1000}
+        />
       </label>
-      {mutation.isError && <p className="alert alert-error">{(mutation.error as Error).message}</p>}
-      <div className="cd-form-actions">
-        <button type="submit" className="btn btn-navy" disabled={mutation.isPending}>
+      {mutation.isError && <Alert tone="error">{(mutation.error as Error).message}</Alert>}
+      <div className="flex gap-2.5">
+        <button type="submit" className={buttonClass({ variant: 'navy' })} disabled={mutation.isPending}>
           {mutation.isPending ? <Spinner /> : 'نشر التقييم'}
         </button>
-        <button type="button" className="btn btn-ghost" onClick={onDone}>
+        <button type="button" className={buttonClass({ variant: 'ghost' })} onClick={onDone}>
           إلغاء
         </button>
       </div>
@@ -576,15 +743,36 @@ function youtubeEmbed(url: string): string | null {
 function PromoModal({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
   const yt = youtubeEmbed(url)
   return (
-    <div className="cd-modal" role="dialog" aria-modal="true" aria-label={`معاينة: ${title}`} onClick={onClose}>
-      <div className="cd-modal-box" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="cd-modal-close" aria-label="إغلاق" onClick={onClose} autoFocus>
+    <div
+      className="fixed inset-0 z-100 flex items-center justify-center bg-[rgba(5,20,40,.75)] p-5"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`معاينة: ${title}`}
+      onClick={onClose}
+    >
+      <div
+        className="relative aspect-video w-full max-w-240 overflow-hidden rounded-[18px] bg-black"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          aria-label="إغلاق"
+          onClick={onClose}
+          autoFocus
+          className="absolute top-2.5 left-2.5 z-1 flex size-10 items-center justify-center rounded-full border-0 bg-white/90"
+        >
           <Icon name="close" />
         </button>
         {yt ? (
-          <iframe src={yt} title={title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+          <iframe
+            src={yt}
+            title={title}
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+            className="size-full border-0"
+          />
         ) : (
-          <video src={url} controls autoPlay playsInline />
+          <video src={url} controls autoPlay playsInline className="size-full" />
         )}
       </div>
     </div>

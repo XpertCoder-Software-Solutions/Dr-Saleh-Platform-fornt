@@ -6,7 +6,9 @@ import { useAuth, useCopy } from '@/auth/hooks'
 import { routes } from '@/app/routes'
 import { Spinner } from '@/components/ui/States'
 import { usePageTitle } from '@/lib/usePageTitle'
-import { AuthShell } from './AuthShell'
+import { AuthShell, AuthSwitch } from './AuthShell'
+import { buttonClass } from '@/components/ui/button'
+import { Alert } from '@/components/ui/States'
 import { PasswordField, TextField } from './fields'
 import { pendingSignup } from './pending'
 
@@ -54,16 +56,12 @@ export function LoginPage() {
 
   return (
     <AuthShell title="مرحبًا بعودتك" sub={t('auth.login.sub')}>
-      <form className="auth-formbox" onSubmit={onSubmit} noValidate>
-        {error && (
-          <p className="alert alert-error" role="alert">
-            {error}
-          </p>
-        )}
+      <form className="flex flex-col gap-4.5" onSubmit={onSubmit} noValidate>
+        {error && <Alert tone="error">{error}</Alert>}
         <TextField
           label="البريد الإلكتروني"
           type="email"
-          className="input-ltr"
+          ltr
           autoComplete="email"
           placeholder="name@example.com"
           required
@@ -78,13 +76,20 @@ export function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           labelAside={<Link to={routes.forgotPassword}>نسيت كلمة المرور؟</Link>}
         />
-        <button type="submit" className="btn btn-navy btn-lg btn-block" disabled={busy || !email || !password}>
+        <button
+          type="submit"
+          className={buttonClass({ variant: 'navy', size: 'lg', block: true })}
+          disabled={busy || !email || !password}
+        >
           {busy ? <Spinner label="جاري تسجيل الدخول" /> : 'تسجيل الدخول'}
         </button>
       </form>
-      <p className="auth-switch">
-        ليس لديك حساب؟ <Link to={routes.register} state={location.state}>سجّل الآن</Link>
-      </p>
+      <AuthSwitch>
+        ليس لديك حساب؟{' '}
+        <Link to={routes.register} state={location.state}>
+          سجّل الآن
+        </Link>
+      </AuthSwitch>
     </AuthShell>
   )
 }
