@@ -9,7 +9,7 @@ import type { Gender } from '@/types/api'
 import { AuthShell, AuthSwitch } from './AuthShell'
 import { buttonClass } from '@/components/ui/button'
 import { Alert } from '@/components/ui/States'
-import { PasswordField, TextField } from './fields'
+import { PasswordField, TextField } from '@/components/ui/fields'
 import { pendingSignup } from './pending'
 
 type Errors = Partial<

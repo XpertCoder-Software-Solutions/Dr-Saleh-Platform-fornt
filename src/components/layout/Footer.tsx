@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Icon, type IconName } from '@/components/ui/Icon'
 import { routes } from '@/app/routes'
+import { CONTACT, SOCIAL } from '@/content/contact'
 
 const PLATFORM = [
   { to: routes.about, label: 'عن د. صالح' },
@@ -18,18 +19,10 @@ const ACCOUNT = [
   { to: routes.referral, label: 'ادعُ صديق واكسب' },
 ]
 
-// TODO(Amr): real social links and phone numbers.
-const SOCIAL: { label: string; icon: IconName; href: string }[] = [
-  { label: 'فيسبوك', icon: 'facebook', href: '#' },
-  { label: 'إنستجرام', icon: 'instagram', href: '#' },
-  { label: 'يوتيوب', icon: 'youtube', href: '#' },
-  { label: 'تيك توك', icon: 'tiktok', href: '#' },
-]
-
-const CONTACT: { label: string; icon: IconName }[] = [
-  { label: 'من داخل مصر: [رقم الهاتف]', icon: 'phone' },
-  { label: 'من خارج مصر: [رقم دولي]', icon: 'globe' },
-  { label: 'واتساب: [رقم واتساب]', icon: 'whatsapp' },
+const CONTACT_LINES: { label: string; icon: IconName }[] = [
+  { label: `من داخل مصر: ${CONTACT.phoneEgypt.label}`, icon: 'phone' },
+  { label: `من خارج مصر: ${CONTACT.phoneIntl.label}`, icon: 'globe' },
+  { label: `واتساب: ${CONTACT.whatsapp.label}`, icon: 'whatsapp' },
 ]
 
 const colTitle = 'mb-1 font-head text-[17px] text-white'
@@ -86,7 +79,7 @@ export function Footer() {
 
         <div className="flex flex-col gap-3">
           <b className={colTitle}>تواصل معنا</b>
-          {CONTACT.map((c) => (
+          {CONTACT_LINES.map((c) => (
             <span key={c.label} className="flex items-center gap-2.5 text-[15px]">
               <span className="flex size-8.5 flex-none items-center justify-center rounded-[10px] text-white glass">
                 <Icon name={c.icon} size={16} />

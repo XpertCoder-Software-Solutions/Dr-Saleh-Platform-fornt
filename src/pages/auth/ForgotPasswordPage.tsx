@@ -8,7 +8,7 @@ import { usePageTitle } from '@/lib/usePageTitle'
 import { AuthShell, AuthSwitch } from './AuthShell'
 import { buttonClass } from '@/components/ui/button'
 import { Alert } from '@/components/ui/States'
-import { OtpInput, PasswordField, TextField } from './fields'
+import { OtpInput, PasswordField, TextField } from '@/components/ui/fields'
 
 /** Two steps on one page: request a code by email, then set a new password with it. */
 export function ForgotPasswordPage() {

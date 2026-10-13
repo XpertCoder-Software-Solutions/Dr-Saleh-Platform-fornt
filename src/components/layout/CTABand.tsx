@@ -4,9 +4,7 @@ import { Icon } from '@/components/ui/Icon'
 import { buttonClass, innerClass, sectionClass } from '@/components/ui/button'
 import { routes } from '@/app/routes'
 import { cn } from '@/lib/cn'
-
-// TODO(Amr): WhatsApp number for the "كلّمنا على واتساب" button.
-const WHATSAPP_URL = 'https://wa.me/'
+import { CONTACT } from '@/content/contact'
 
 export function CTABand({
   title = 'مش لاقي الدورة المناسبة؟',
@@ -34,7 +32,7 @@ export function CTABand({
           <p className="text-lg leading-loose text-on-dark">{body}</p>
           <div className="mt-1.5 flex flex-wrap gap-3.5">
             <a
-              href={WHATSAPP_URL}
+              href={CONTACT.whatsapp.href}
               target="_blank"
               rel="noreferrer"
               className={buttonClass({ variant: 'gold', size: 'lg' })}

@@ -1,4 +1,11 @@
-import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react'
+import {
+  useId,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react'
 import { Icon } from '@/components/ui/Icon'
 import { inputClass } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
@@ -163,5 +170,112 @@ export function OtpInput({
         />
       ))}
     </div>
+  )
+}
+
+interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label: string
+  error?: string | null
+  hint?: ReactNode
+  labelAside?: ReactNode
+}
+
+export function TextAreaField({ label, error, hint, labelAside, className, ...rest }: TextAreaProps) {
+  const id = useId()
+  return (
+    <FieldFrame id={id} label={label} labelAside={labelAside} error={error} hint={hint}>
+      <textarea
+        id={id}
+        rows={4}
+        className={cn(inputClass, 'min-h-28 resize-y', className)}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${id}-err` : hint ? `${id}-hint` : undefined}
+        {...rest}
+      />
+    </FieldFrame>
+  )
+}
+
+interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label: string
+  error?: string | null
+  options: { value: string; label: string }[]
+  placeholder?: string
+}
+
+export function SelectField({ label, error, options, placeholder, className, ...rest }: SelectProps) {
+  const id = useId()
+  return (
+    <FieldFrame id={id} label={label} error={error}>
+      <select
+        id={id}
+        className={cn(inputClass, 'appearance-auto', className)}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${id}-err` : undefined}
+        {...rest}
+      >
+        {placeholder && <option value="">{placeholder}</option>}
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </FieldFrame>
+  )
+}
+
+/** A set of pill buttons acting as one radio group (e.g. consultation type). */
+export function ChoiceChips<T extends string>({
+  label,
+  value,
+  onChange,
+  options,
+  error,
+  hint,
+}: {
+  label: string
+  value: T | ''
+  onChange: (v: T) => void
+  options: { value: T; label: string }[]
+  error?: string | null
+  hint?: ReactNode
+}) {
+  const id = useId()
+  return (
+    <div className="flex flex-col gap-2" role="radiogroup" aria-labelledby={id}>
+      <span id={id} className="text-[15px] font-semibold text-ink">
+        {label}
+      </span>
+      {hint && <span className="-mt-1.5 text-[13px] text-muted">{hint}</span>}
+      <div className="flex flex-wrap gap-2">
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={value === o.value}
+            onClick={() => onChange(o.value)}
+            className="min-h-11 rounded-xl border-[1.5px] border-line-2 bg-white px-4 text-[15px] font-semibold text-text-2 transition-colors hover:border-blue-300 aria-checked:bg-navy aria-checked:border-transparent aria-checked:text-white"
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      {error && <span className="text-sm text-danger">{error}</span>}
+    </div>
+  )
+}
+
+/** Checkbox with a label to its side. */
+export function CheckField({
+  label,
+  ...rest
+}: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & { label: ReactNode }) {
+  return (
+    <label className="flex cursor-pointer items-start gap-2.5 text-[15px] text-text-2">
+      <input type="checkbox" className="mt-0.5 size-5 flex-none accent-blue-600" {...rest} />
+      <span>{label}</span>
+    </label>
   )
 }

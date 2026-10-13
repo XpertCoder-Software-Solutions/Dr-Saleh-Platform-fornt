@@ -8,7 +8,7 @@ import { usePageTitle } from '@/lib/usePageTitle'
 import { AuthShell, AuthSwitch } from './AuthShell'
 import { buttonClass } from '@/components/ui/button'
 import { Alert } from '@/components/ui/States'
-import { OtpInput } from './fields'
+import { OtpInput } from '@/components/ui/fields'
 import { pendingSignup } from './pending'
 
 const RESEND_SECONDS = 60

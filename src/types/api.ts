@@ -233,8 +233,9 @@ export interface BookFormat {
   discountPriceEGP?: Money | null
   priceUSD?: Money | null
   discountPriceUSD?: Money | null
-  readerFile?: string | null
-  audioFile?: string | null
+  hasReaderFile?: boolean
+  hasAudioFile?: boolean
+  /** Audio length in seconds. */
   audioDuration?: number | null
   isActive: boolean
   createdAt?: DateTimeString

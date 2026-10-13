@@ -10,6 +10,7 @@ import { CTABand } from '@/components/layout/CTABand'
 import { CourseCard, CourseCardSkeleton } from '@/components/course/CourseCard'
 import { catalogGridClass } from '@/components/course/grid'
 import { Icon } from '@/components/ui/Icon'
+import { Pager } from '@/components/ui/Pager'
 import { buttonClass, innerClass, sectionClass } from '@/components/ui/button'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { cn } from '@/lib/cn'
@@ -245,10 +246,8 @@ export function CoursesPage() {
 
             {pagination && pagination.totalPages > 1 && (
               <Pager
-                page={pagination.page}
-                totalPages={pagination.totalPages}
-                total={pagination.total}
-                pageSize={pagination.limit}
+                pagination={pagination}
+                noun="دورة"
                 onChange={(p) => {
                   update({ page: p > 1 ? String(p) : null })
                   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -261,72 +260,5 @@ export function CoursesPage() {
 
       <CTABand />
     </>
-  )
-}
-
-const pageBtn =
-  'flex h-11 min-w-11 items-center justify-center rounded-xl border-[1.5px] border-line-2 bg-white font-bold text-ink ' +
-  'disabled:cursor-not-allowed disabled:opacity-40 aria-[current=page]:border-transparent aria-[current=page]:bg-navy aria-[current=page]:text-white'
-
-function Pager({
-  page,
-  totalPages,
-  total,
-  pageSize,
-  onChange,
-}: {
-  page: number
-  totalPages: number
-  total: number
-  pageSize: number
-  onChange: (page: number) => void
-}) {
-  const from = (page - 1) * pageSize + 1
-  const to = Math.min(total, page * pageSize)
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
-    (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1,
-  )
-  return (
-    <nav
-      className="mt-7 flex flex-wrap items-center justify-between gap-3.5 text-[15px] text-muted"
-      aria-label="الصفحات"
-    >
-      <span>
-        عرض {from}-{to} من {total} دورة
-      </span>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          className={pageBtn}
-          aria-label="الصفحة السابقة"
-          disabled={page <= 1}
-          onClick={() => onChange(page - 1)}
-        >
-          <Icon name="arrowRight" size={16} />
-        </button>
-        {pages.map((p, i) => (
-          <span key={p} className="flex items-center gap-2">
-            {i > 0 && p - pages[i - 1] > 1 && <span>…</span>}
-            <button
-              type="button"
-              className={pageBtn}
-              aria-current={p === page ? 'page' : undefined}
-              onClick={() => onChange(p)}
-            >
-              {p}
-            </button>
-          </span>
-        ))}
-        <button
-          type="button"
-          className={pageBtn}
-          aria-label="الصفحة التالية"
-          disabled={page >= totalPages}
-          onClick={() => onChange(page + 1)}
-        >
-          <Icon name="arrowLeft" size={16} />
-        </button>
-      </div>
-    </nav>
   )
 }

@@ -70,10 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     const profile = await usersApi.profile()
+    const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ')
     setUser({
       id: profile.id,
-      fullName: profile.fullName,
-      firstName: firstNameOf(profile.fullName),
+      fullName,
+      firstName: profile.firstName || firstNameOf(fullName),
       email: profile.email,
       role: profile.role ?? 'User',
       gender: profile.gender ?? null,

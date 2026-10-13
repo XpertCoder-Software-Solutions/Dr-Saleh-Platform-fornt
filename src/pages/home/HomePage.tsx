@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { articlesApi, booksApi, coursesApi } from '@/api/endpoints'
-import { resolveAssetUrl } from '@/api/client'
 import { useAudience, useCopy } from '@/auth/hooks'
 import { routes } from '@/app/routes'
 import { Icon, type IconName } from '@/components/ui/Icon'
@@ -14,10 +13,12 @@ import { HeroWave } from '@/components/layout/PageHero'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Highlight } from '@/components/ui/Highlight'
 import { cn } from '@/lib/cn'
-import { formatDate, formatEGP, minutesLabel, readingMinutes } from '@/lib/format'
 import { usePageTitle } from '@/lib/usePageTitle'
-import type { Book, CourseSummary } from '@/types/api'
+import type { CourseSummary } from '@/types/api'
 import { CHANNELS } from './channels'
+import { BookCard } from '@/components/catalog/BookCard'
+import { ArticleCard } from '@/components/catalog/ArticleCard'
+import { articlesGridClass, booksGridClass } from '@/components/catalog/grids'
 
 const HERO_WORDS = {
   guest: ['فهم أولادكم', 'قلب ابنكم', 'هدوءكم إنتم'],
@@ -59,15 +60,6 @@ const PILLARS: { to: string; title: string; body: string; icon: IconName; grad: 
     glow: '#5B5BD6',
   },
 ]
-
-const BOOK_THEMES = [
-  { shelf: '#EAF3FA', grad: 'linear-gradient(135deg, #0B2E52 0%, #1E5F96 55%, #3D9BD8 100%)' },
-  { shelf: '#FDF3E1', grad: 'linear-gradient(135deg, #E8A33D 0%, #F2B856 50%, #F7CF7E 100%)' },
-  { shelf: '#E6F4FC', grad: 'linear-gradient(135deg, #1E5F96 0%, #3D9BD8 50%, #7CD3FF 100%)' },
-  { shelf: '#EEEBFB', grad: 'linear-gradient(135deg, #3B3A8F 0%, #5B5BD6 50%, #F2A7C3 100%)' },
-]
-
-const FORMAT_LABEL = { Physical: 'ورقي', Digital: 'رقمي', Audio: 'صوتي' } as const
 
 // TODO(Amr): real testimonials. The section stays hidden until there are some,
 // so the site never shows made-up reviews.
@@ -542,19 +534,6 @@ function AboutDoctor() {
 
 /* ---------------- books ---------------- */
 
-function bookStartPrice(book: Book): number | null {
-  const prices = book.formats
-    .filter((f) => f.isActive)
-    .map((f) => f.discountPriceEGP ?? f.priceEGP)
-    .filter((p): p is number => typeof p === 'number')
-  if (prices.length) return Math.min(...prices)
-  return book.discountPriceEGP ?? book.priceEGP ?? null
-}
-
-/** Up to 4 per row; fewer books keep their width. */
-const booksGridClass =
-  'grid grid-cols-[repeat(auto-fill,minmax(max(220px,calc((100%-72px)/4)),1fr))] gap-6 max-sm:grid-cols-2 max-sm:gap-3'
-
 function BooksSection() {
   const t = useCopy()
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['books'], queryFn: booksApi.list })
@@ -582,74 +561,11 @@ function BooksSection() {
           <div className={booksGridClass}>
             {isLoading
               ? [0, 1, 2, 3].map((i) => <div key={i} className="h-95 skeleton rounded-card" />)
-              : books.map((b, i) => (
-                  <BookCard key={b.id} book={b} theme={BOOK_THEMES[i % BOOK_THEMES.length]} />
-                ))}
+              : books.map((b) => <BookCard key={b.id} book={b} />)}
           </div>
         )}
       </div>
     </section>
-  )
-}
-
-function BookCard({ book, theme }: { book: Book; theme: (typeof BOOK_THEMES)[number] }) {
-  const cover = resolveAssetUrl(book.coverImage)
-  const price = bookStartPrice(book)
-  const formats = [...new Set(book.formats.filter((f) => f.isActive).map((f) => f.formatType))]
-  const bookShadow = 'rounded-[4px_10px_10px_4px] shadow-[-10px_16px_30px_-10px_rgba(12,42,74,.55)]'
-  return (
-    <Link
-      to={`${routes.library}/${book.slug}`}
-      className="glow-card flex flex-col gap-4 rounded-card border border-line bg-white p-4.5 text-text hover:text-text max-sm:p-3"
-    >
-      <div
-        className="flex h-65 items-center justify-center overflow-hidden rounded-2xl max-sm:h-50"
-        style={{ background: theme.shelf }}
-      >
-        {cover ? (
-          <img
-            className={cn('h-53.5 w-auto tilt max-sm:h-40', bookShadow)}
-            src={cover}
-            alt=""
-            loading="lazy"
-          />
-        ) : (
-          <div
-            className={cn(
-              'relative flex h-53.5 w-37.5 tilt flex-col justify-between overflow-hidden px-4 py-4.5 max-sm:h-40 max-sm:w-28',
-              bookShadow,
-            )}
-            style={{ background: theme.grad }}
-          >
-            <span className="absolute inset-y-0 right-2 w-0.5 bg-white/25" />
-            <span className="font-head text-xl leading-[1.3] font-bold text-white max-sm:text-base">
-              {book.titleAr}
-            </span>
-            <span className="text-[11px] text-white/85">د. صالح عبد الكريم</span>
-          </div>
-        )}
-      </div>
-      <div className="flex flex-col gap-2.5 px-1 pb-1">
-        <span className="font-head text-[19px] font-semibold text-ink max-sm:text-base">{book.titleAr}</span>
-        {formats.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {formats.map((f) => (
-              <span
-                key={f}
-                className="rounded-lg bg-surface-blue px-2.5 py-1 text-[13px] font-semibold text-blue-500"
-              >
-                {FORMAT_LABEL[f]}
-              </span>
-            ))}
-          </div>
-        )}
-        {price !== null && (
-          <span className="text-[15px] text-muted">
-            يبدأ من <b className="text-lg text-ink">{formatEGP(price)}</b>
-          </span>
-        )}
-      </div>
-    </Link>
   )
 }
 
@@ -774,12 +690,6 @@ function Testimonials() {
 
 /* ---------------- articles ---------------- */
 
-const ARTICLE_GRADS = [
-  'linear-gradient(135deg, #1E5F96 0%, #3D9BD8 55%, #7CD3FF 100%)',
-  'linear-gradient(135deg, #E8A33D 0%, #F2B856 50%, #F7CF7E 100%)',
-  'linear-gradient(135deg, #0B2E52 0%, #5B5BD6 60%, #F2A7C3 100%)',
-]
-
 function ArticlesSection() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['articles', { page: 1, limit: 3 }],
@@ -797,46 +707,10 @@ function ArticlesSection() {
           title="اقرأ في ٥ دقايق"
           more={{ to: routes.blog, label: 'كل المقالات' }}
         />
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(max(280px,calc((100%-48px)/3)),1fr))] gap-6 max-sm:grid-cols-1">
+        <div className={articlesGridClass}>
           {isLoading
             ? [0, 1, 2].map((i) => <div key={i} className="h-75 skeleton rounded-card" />)
-            : articles.map((a, i) => {
-                const cover = resolveAssetUrl(a.coverImage)
-                return (
-                  <Link
-                    key={a.id}
-                    to={`${routes.blog}/${a.slug}`}
-                    className="glow-card flex flex-col gap-3.5 rounded-card border border-line bg-white px-3.5 pt-3.5 pb-5.5 text-text hover:text-text"
-                  >
-                    <div
-                      className="relative h-50 overflow-hidden rounded-[18px]"
-                      style={{ background: ARTICLE_GRADS[i % ARTICLE_GRADS.length] }}
-                    >
-                      {cover ? (
-                        <img src={cover} alt="" loading="lazy" className="size-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 dots opacity-40" />
-                      )}
-                      {a.category && (
-                        <span className="absolute right-3.5 bottom-3.5 rounded-full px-3 py-1.25 text-[13px] font-bold text-white glass">
-                          {a.category.name}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex gap-4 px-2 text-sm text-muted">
-                      <span className="inline-flex items-center gap-1.5">
-                        <Icon name="calendar" size={15} />
-                        {formatDate(a.createdAt)}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Icon name="clock" size={15} />
-                        {minutesLabel(readingMinutes(a.content ?? a.shortContent))}
-                      </span>
-                    </div>
-                    <h3 className="px-2 text-xl leading-relaxed font-semibold">{a.title}</h3>
-                  </Link>
-                )
-              })}
+            : articles.map((a) => <ArticleCard key={a.id} article={a} />)}
         </div>
       </div>
     </section>
