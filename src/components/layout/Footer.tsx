@@ -23,7 +23,6 @@ const ACCOUNT = [
 const CONTACT_LINES: { title: string; items: { label: string; href: string }[]; icon: IconName }[] = [
   { title: 'من داخل مصر', items: CONTACT.phonesEgypt, icon: 'phone' },
   { title: 'من خارج مصر', items: [CONTACT.phoneIntl], icon: 'globe' },
-  { title: 'واتساب', items: [CONTACT.whatsapp], icon: 'whatsapp' },
 ]
 
 const colTitle = 'mb-1 font-head text-[17px] text-white'
@@ -89,30 +88,19 @@ export function Footer() {
               </span>
               <span className="flex flex-col">
                 <span className="text-[13px]">{c.title}</span>
-                {c.items.map((n) => (
-                  <a
-                    key={n.href}
-                    href={n.href}
-                    dir="ltr"
-                    className={cn(colLink, 'self-start font-semibold text-white')}
-                  >
-                    {n.label}
-                  </a>
-                ))}
+                <span className="flex flex-wrap gap-x-2">
+                  {c.items.map((n, i) => (
+                    <span key={n.href} className="flex gap-x-2">
+                      {i > 0 && <span aria-hidden="true">-</span>}
+                      <a href={n.href} dir="ltr" className={cn(colLink, 'font-semibold text-white')}>
+                        {n.label}
+                      </a>
+                    </span>
+                  ))}
+                </span>
               </span>
             </span>
           ))}
-          <a
-            href={CONTACT.address.href}
-            target="_blank"
-            rel="noreferrer"
-            className={cn(colLink, 'flex items-start gap-2.5 leading-relaxed')}
-          >
-            <span className="flex size-8.5 flex-none items-center justify-center rounded-[10px] text-white glass">
-              <Icon name="mapPin" size={16} />
-            </span>
-            {CONTACT.address.label}
-          </a>
           <span className="flex items-center gap-2.5 text-[15px]">
             <span className="flex size-8.5 flex-none items-center justify-center rounded-[10px] text-white glass">
               <Icon name="clock" size={16} />
