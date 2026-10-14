@@ -1,7 +1,8 @@
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, ApiClientError } from '@/api/client'
+import { useMyCourses } from '@/api/account'
 import { coursesApi } from '@/api/endpoints'
 import { useWishlist } from '@/api/wishlist'
 import { useAuth, useCopy } from '@/auth/hooks'
@@ -140,7 +141,12 @@ function CourseDetails({ course }: { course: Course }) {
             {course.ratingAverage != null && (
               <span>
                 <b className="text-lg text-white">{course.ratingAverage}</b>
-                <span className="tracking-[1px] text-gold-light">★★★★★</span> ({course.ratingCount} تقييم)
+                <Stars
+                  value={Math.round(course.ratingAverage)}
+                  className="text-gold-light"
+                  dim="text-white/25"
+                />
+                <span>({course.ratingCount} تقييم)</span>
               </span>
             )}
             {lessonsCount > 0 && (
@@ -569,11 +575,11 @@ function BuyCard({
 
 /* ---------------- reviews ---------------- */
 
-function Stars({ value, className }: { value: number; className?: string }) {
+function Stars({ value, className, dim }: { value: number; className?: string; dim?: string }) {
   return (
     <span className={cn('tracking-[1px] text-gold', className)} aria-label={`${value} من 5`}>
       {'★'.repeat(value)}
-      <span className="text-line-2">{'★'.repeat(5 - value)}</span>
+      <span className={dim ?? 'text-line-2'}>{'★'.repeat(5 - value)}</span>
     </span>
   )
 }
@@ -581,12 +587,24 @@ function Stars({ value, className }: { value: number; className?: string }) {
 function Reviews({ course }: { course: Course }) {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [writing, setWriting] = useState(false)
+  // "?review=1" (from my courses) opens the form straight away.
+  const [params] = useSearchParams()
+  const [writing, setWriting] = useState(() => params.get('review') === '1')
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['courses', 'reviews', course.id],
     queryFn: () => coursesApi.reviews(course.id, 1, 50),
   })
+  const myCourses = useMyCourses()
   const reviews = data?.reviews ?? []
+  const owns = Boolean(myCourses.data?.some((e) => e.courseId === course.id))
+  const mine = user ? reviews.find((r) => r.userId === user.id) : undefined
+  const canWrite = Boolean(user) && owns && !mine
+
+  useEffect(() => {
+    if (params.get('review') === '1' && !isLoading) {
+      document.getElementById('cd-reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [params, isLoading])
   const total = data?.pagination.total ?? 0
   const avg =
     course.ratingAverage ?? (reviews.length ? reviews.reduce((n, r) => n + r.rating, 0) / reviews.length : 0)
@@ -609,7 +627,7 @@ function Reviews({ course }: { course: Course }) {
           <div className="flex flex-wrap items-center gap-6">
             <div className="flex flex-col items-center gap-1 rounded-[18px] bg-surface px-6.5 py-4.5">
               <b className="font-head text-[44px] leading-none text-ink">{total ? avg.toFixed(1) : '—'}</b>
-              <span className="tracking-[1px] text-gold">★★★★★</span>
+              <Stars value={total ? Math.round(avg) : 0} />
               <small className="text-muted">{total} تقييم</small>
             </div>
             <div className="flex flex-[1_1_240px] flex-col gap-1.5">
@@ -624,20 +642,36 @@ function Reviews({ course }: { course: Course }) {
                 </div>
               ))}
             </div>
-            <button
-              type="button"
-              className={buttonClass({ variant: 'navy' })}
-              onClick={() =>
-                user
-                  ? setWriting((w) => !w)
-                  : navigate(routes.login, { state: { from: routes.course(course.id) } })
-              }
-            >
-              اكتب تقييم
-            </button>
+            {!user ? (
+              <button
+                type="button"
+                className={buttonClass({ variant: 'navy' })}
+                onClick={() => navigate(routes.login, { state: { from: routes.course(course.id) } })}
+              >
+                اكتب تقييم
+              </button>
+            ) : mine ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E7F6EC] px-3.5 py-2 text-sm font-bold text-success">
+                <Icon name="check" size={15} /> قيّمت الدورة دي، شكرًا
+              </span>
+            ) : owns ? (
+              <button
+                type="button"
+                className={buttonClass({ variant: 'navy' })}
+                onClick={() => setWriting((w) => !w)}
+              >
+                اكتب تقييم
+              </button>
+            ) : (
+              myCourses.isSuccess && (
+                <span className="max-w-55 text-sm leading-relaxed text-muted">
+                  التقييم متاح للي مشتركين في الدورة.
+                </span>
+              )
+            )}
           </div>
 
-          {writing && <ReviewForm courseId={course.id} onDone={() => setWriting(false)} />}
+          {writing && canWrite && <ReviewForm courseId={course.id} onDone={() => setWriting(false)} />}
 
           {reviews.length === 0 ? (
             <p className="py-2 text-[15px] text-muted">لسه مفيش تقييمات للدورة دي.</p>
@@ -675,6 +709,14 @@ function ReviewItem({ review }: { review: CourseReview }) {
       </div>
     </li>
   )
+}
+
+function reviewError(error: unknown): string {
+  if (error instanceof ApiClientError) {
+    if (error.statusCode === 409) return 'إنت قيّمت الدورة دي قبل كده.'
+    if (error.statusCode === 403) return 'التقييم متاح بعد الاشتراك في الدورة.'
+  }
+  return (error as Error).message
 }
 
 function ReviewForm({ courseId, onDone }: { courseId: string; onDone: () => void }) {
@@ -723,7 +765,7 @@ function ReviewForm({ courseId, onDone }: { courseId: string; onDone: () => void
           maxLength={1000}
         />
       </label>
-      {mutation.isError && <Alert tone="error">{(mutation.error as Error).message}</Alert>}
+      {mutation.isError && <Alert tone="error">{reviewError(mutation.error)}</Alert>}
       <div className="flex gap-2.5">
         <button type="submit" className={buttonClass({ variant: 'navy' })} disabled={mutation.isPending}>
           {mutation.isPending ? <Spinner /> : 'نشر التقييم'}

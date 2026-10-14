@@ -80,11 +80,9 @@ export function InvoicePage() {
                   className="h-14 w-auto"
                 />
                 <span className="text-xs text-muted">منصة د. صالح عبد الكريم للتربية</span>
-                {!CONTACT.phoneEgypt.label.startsWith('[') && (
-                  <span className="text-xs text-muted" dir="ltr">
-                    {CONTACT.phoneEgypt.label}
-                  </span>
-                )}
+                <span className="text-xs text-muted" dir="ltr">
+                  {CONTACT.phonesEgypt.map((p) => p.label).join(' · ')}
+                </span>
               </div>
             </header>
 

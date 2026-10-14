@@ -3,6 +3,7 @@ import type {
   Category,
   Course,
   CourseListData,
+  CourseReview,
   CourseReviewListData,
   CourseSummary,
   Gender,
@@ -72,7 +73,12 @@ export const coursesApi = {
   byId: (id: string) => api.get<Course>(`/courses/${id}`),
   reviews: (courseId: string, page = 1, limit = 10) =>
     api.get<CourseReviewListData>(`/courses/${courseId}/reviews`, { params: { page, limit } }),
+  /** Best recent reviews across all courses, for the home page. */
+  featuredReviews: (limit = 6) =>
+    api.get<{ reviews: FeaturedReview[] }>('/course-reviews/featured', { params: { limit } }),
 }
+
+export type FeaturedReview = CourseReview & { course: { id: string; titleAr: string } }
 
 // ---------- library ----------
 

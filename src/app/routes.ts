@@ -54,5 +54,6 @@ export const routes = {
   adminUsers: '/admin/users',
   adminCatalog: '/admin/catalog',
   adminBlog: '/admin/blog',
+  adminReviews: '/admin/reviews',
   adminSettings: '/admin/settings',
 } as const

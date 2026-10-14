@@ -184,6 +184,15 @@ function EnrolledCard({ enrollment }: { enrollment: Enrollment }) {
                 : g('ابدأ الدورة', 'ابدئي الدورة', 'بدء الدورة')}
             </Link>
           )}
+          {enrollment.completionPercentage >= 50 && (
+            <Link
+              to={`${routes.course(enrollment.courseId)}?review=1`}
+              className="mt-2.5 flex items-center justify-center gap-1.5 text-sm font-bold text-blue-600"
+            >
+              <Icon name="star" size={15} />
+              {g('قيّم الدورة', 'قيّمي الدورة', 'تقييم الدورة')}
+            </Link>
+          )}
         </div>
       </div>
     </li>

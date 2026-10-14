@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Icon, type IconName } from '@/components/ui/Icon'
 import { routes } from '@/app/routes'
 import { CONTACT, SOCIAL } from '@/content/contact'
+import { cn } from '@/lib/cn'
 
 const PLATFORM = [
   { to: routes.about, label: 'عن د. صالح' },
@@ -19,10 +20,10 @@ const ACCOUNT = [
   { to: routes.referral, label: 'ادعُ صديق واكسب' },
 ]
 
-const CONTACT_LINES: { label: string; icon: IconName }[] = [
-  { label: `من داخل مصر: ${CONTACT.phoneEgypt.label}`, icon: 'phone' },
-  { label: `من خارج مصر: ${CONTACT.phoneIntl.label}`, icon: 'globe' },
-  { label: `واتساب: ${CONTACT.whatsapp.label}`, icon: 'whatsapp' },
+const CONTACT_LINES: { title: string; items: { label: string; href: string }[]; icon: IconName }[] = [
+  { title: 'من داخل مصر', items: CONTACT.phonesEgypt, icon: 'phone' },
+  { title: 'من خارج مصر', items: [CONTACT.phoneIntl], icon: 'globe' },
+  { title: 'واتساب', items: [CONTACT.whatsapp], icon: 'whatsapp' },
 ]
 
 const colTitle = 'mb-1 font-head text-[17px] text-white'
@@ -45,12 +46,14 @@ export function Footer() {
           <p className="max-w-85 text-[15px] leading-loose">
             منصة تعليمية في التربية الإيجابية والبناء النفسي للأطفال والمراهقين: دورات، كتب، واستشارات خاصة.
           </p>
-          <div className="flex gap-2.5">
+          <div className="flex flex-wrap gap-2.5">
             {SOCIAL.map((s) => (
               <a
                 key={s.label}
                 href={s.href}
                 aria-label={s.label}
+                target="_blank"
+                rel="noreferrer"
                 className="flex size-11 items-center justify-center rounded-xl text-white glass hover:bg-white/20 hover:text-white"
               >
                 <Icon name={s.icon} size={18} />
@@ -80,13 +83,42 @@ export function Footer() {
         <div className="flex flex-col gap-3">
           <b className={colTitle}>تواصل معنا</b>
           {CONTACT_LINES.map((c) => (
-            <span key={c.label} className="flex items-center gap-2.5 text-[15px]">
+            <span key={c.title} className="flex items-start gap-2.5 text-[15px]">
               <span className="flex size-8.5 flex-none items-center justify-center rounded-[10px] text-white glass">
                 <Icon name={c.icon} size={16} />
               </span>
-              {c.label}
+              <span className="flex flex-col">
+                <span className="text-[13px]">{c.title}</span>
+                {c.items.map((n) => (
+                  <a
+                    key={n.href}
+                    href={n.href}
+                    dir="ltr"
+                    className={cn(colLink, 'self-start font-semibold text-white')}
+                  >
+                    {n.label}
+                  </a>
+                ))}
+              </span>
             </span>
           ))}
+          <a
+            href={CONTACT.address.href}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(colLink, 'flex items-start gap-2.5 leading-relaxed')}
+          >
+            <span className="flex size-8.5 flex-none items-center justify-center rounded-[10px] text-white glass">
+              <Icon name="mapPin" size={16} />
+            </span>
+            {CONTACT.address.label}
+          </a>
+          <span className="flex items-center gap-2.5 text-[15px]">
+            <span className="flex size-8.5 flex-none items-center justify-center rounded-[10px] text-white glass">
+              <Icon name="clock" size={16} />
+            </span>
+            {CONTACT.hours.days}، {CONTACT.hours.time}
+          </span>
           <Link
             to={routes.contact}
             className="inline-flex items-center gap-1.5 font-bold text-gold-light hover:text-white"

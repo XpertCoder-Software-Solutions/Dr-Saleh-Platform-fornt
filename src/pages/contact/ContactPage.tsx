@@ -32,7 +32,8 @@ const FAQS = [
 
 const CHANNELS: {
   label: string
-  value: string
+  /** One or more numbers; each one is a link when it has an href. */
+  value: { label: string; href?: string }[]
   cta: string
   href?: string
   icon: IconName
@@ -41,7 +42,7 @@ const CHANNELS: {
 }[] = [
   {
     label: 'واتساب',
-    value: CONTACT.whatsapp.label,
+    value: [CONTACT.whatsapp],
     cta: 'ابدأ محادثة',
     href: CONTACT.whatsapp.href,
     icon: 'whatsapp',
@@ -49,15 +50,15 @@ const CHANNELS: {
   },
   {
     label: 'من داخل مصر',
-    value: CONTACT.phoneEgypt.label,
+    value: CONTACT.phonesEgypt,
     cta: 'اتصل بينا',
-    href: CONTACT.phoneEgypt.href,
+    href: CONTACT.phonesEgypt[0].href,
     icon: 'phone',
     bg: 'linear-gradient(135deg, #0B2E52 0%, #1E5F96 55%, #3D9BD8 100%)',
   },
   {
     label: 'من خارج مصر',
-    value: CONTACT.phoneIntl.label,
+    value: [CONTACT.phoneIntl],
     cta: 'اتصل بينا',
     href: CONTACT.phoneIntl.href,
     icon: 'globe',
@@ -65,7 +66,7 @@ const CHANNELS: {
   },
   {
     label: 'مواعيد العمل',
-    value: CONTACT.hours.days,
+    value: [{ label: CONTACT.hours.days }],
     cta: CONTACT.hours.time,
     icon: 'clock',
     bg: 'linear-gradient(135deg, #F7CF7E 0%, #E8A33D 100%)',
@@ -143,20 +144,33 @@ export function ContactPage() {
                 <Icon name={c.icon} />
               </span>
               <span className="mt-1 text-sm text-muted">{c.label}</span>
-              <b className="font-head text-lg text-ink" dir={c.href ? 'ltr' : undefined}>
-                {c.value}
+              <b className="flex flex-col font-head text-lg text-ink">
+                {c.value.map((v) =>
+                  v.href ? (
+                    <a
+                      key={v.label}
+                      href={v.href}
+                      dir="ltr"
+                      className="self-start text-ink hover:text-blue-600"
+                    >
+                      {v.label}
+                    </a>
+                  ) : (
+                    <span key={v.label}>{v.label}</span>
+                  ),
+                )}
               </b>
               {c.href ? (
                 <a
                   href={c.href}
-                  className="inline-flex items-center gap-1 text-sm font-bold"
+                  className="mt-auto inline-flex items-center gap-1 text-sm font-bold"
                   target="_blank"
                   rel="noreferrer"
                 >
                   {c.cta} <Icon name="arrowLeft" size={14} />
                 </a>
               ) : (
-                <span className="text-sm font-bold text-blue-500">{c.cta}</span>
+                <span className="mt-auto text-sm font-bold text-blue-500">{c.cta}</span>
               )}
             </div>
           ))}
@@ -261,13 +275,34 @@ export function ContactPage() {
               </Link>
             </div>
             <div className="flex flex-col gap-3 rounded-card border border-line bg-white p-5">
+              <b className="font-head text-lg text-ink">زورنا</b>
+              <p className="flex items-start gap-2.5 text-[15px] leading-relaxed text-text">
+                <Icon name="mapPin" size={18} className="mt-1 flex-none text-blue-600" />
+                {CONTACT.address.label}
+              </p>
+              <p className="flex items-center gap-2.5 text-sm text-muted">
+                <Icon name="clock" size={16} className="flex-none text-blue-600" />
+                {CONTACT.hours.days}، {CONTACT.hours.time}
+              </p>
+              <a
+                href={CONTACT.address.href}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonClass({ variant: 'outline', size: 'sm', className: 'self-start' })}
+              >
+                <Icon name="mapPin" size={15} /> افتح على الخريطة
+              </a>
+            </div>
+            <div className="flex flex-col gap-3 rounded-card border border-line bg-white p-5">
               <b className="font-head text-lg text-ink">تابعنا</b>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {SOCIAL.map((s) => (
                   <a
                     key={s.label}
                     href={s.href}
                     aria-label={s.label}
+                    target="_blank"
+                    rel="noreferrer"
                     className="flex size-11 items-center justify-center rounded-xl border border-line bg-surface text-ink hover:bg-hover hover:text-ink"
                   >
                     <Icon name={s.icon} size={18} />

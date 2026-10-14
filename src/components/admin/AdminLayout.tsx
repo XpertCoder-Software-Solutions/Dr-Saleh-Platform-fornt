@@ -22,6 +22,7 @@ const NAV: {
   { to: routes.adminUsers, label: 'المستخدمين', icon: 'user' },
   { to: routes.adminCatalog, label: 'الكتب والمنتجات', icon: 'book' },
   { to: routes.adminBlog, label: 'المقالات', icon: 'pen' },
+  { to: routes.adminReviews, label: 'التقييمات', icon: 'star' },
   { to: routes.adminSettings, label: 'الإعدادات', icon: 'sliders' },
 ]
 

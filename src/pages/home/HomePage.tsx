@@ -61,9 +61,29 @@ const PILLARS: { to: string; title: string; body: string; icon: IconName; grad: 
   },
 ]
 
-// TODO(Amr): real testimonials. The section stays hidden until there are some,
-// so the site never shows made-up reviews.
-const TESTIMONIALS: { head: string; body: string; name: string; course: string }[] = []
+/** The best recent course reviews (4+ stars with a comment); the section hides when there are none. */
+function useTestimonials() {
+  const { data } = useQuery({
+    queryKey: ['courses', 'featured-reviews'],
+    queryFn: () => coursesApi.featuredReviews(6),
+    staleTime: 10 * 60_000,
+  })
+  return (data?.reviews ?? []).map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    head: r.title || firstSentence(r.comment ?? ''),
+    body: r.comment ?? '',
+    name: r.user?.fullName ?? 'متدرب',
+    course: r.course.titleAr,
+  }))
+}
+
+function firstSentence(text: string) {
+  const s = text.split(/[.!؟?\n]/)[0].trim()
+  return s.length > 60 ? `${s.slice(0, 57)}…` : s
+}
+
+type Testimonial = ReturnType<typeof useTestimonials>[number]
 
 export function HomePage() {
   usePageTitle()
@@ -77,7 +97,7 @@ export function HomePage() {
       <AboutDoctor />
       <BooksSection />
       <ConsultBand />
-      {TESTIMONIALS.length > 0 && <Testimonials />}
+      <TestimonialsSection />
       <ArticlesSection />
     </>
   )
@@ -622,14 +642,19 @@ function ConsultBand() {
 
 /* ---------------- testimonials ---------------- */
 
-function Testimonials() {
+function TestimonialsSection() {
+  const list = useTestimonials()
+  return list.length > 0 ? <Testimonials list={list} /> : null
+}
+
+function Testimonials({ list: TESTIMONIALS }: { list: Testimonial[] }) {
   const [i, setI] = useState(0)
   const n = TESTIMONIALS.length
   useEffect(() => {
     const id = setInterval(() => setI((x) => (x + 1) % n), 6000)
     return () => clearInterval(id)
   }, [n])
-  const rv = TESTIMONIALS[i]
+  const rv = TESTIMONIALS[i % n]
   return (
     <section className={sectionClass}>
       <div className={innerClass}>
@@ -641,13 +666,16 @@ function Testimonials() {
         />
         <div className="flex flex-wrap items-stretch gap-6">
           <figure className="m-0 flex flex-[1.2_1_420px] flex-col gap-5 rounded-[28px] p-9 gborder">
+            <span className="tracking-[2px] text-gold" aria-label={`${rv.rating} من 5`}>
+              {'★'.repeat(rv.rating)}
+            </span>
             <span className="font-head text-[26px] font-semibold text-ink">{rv.head}</span>
             <blockquote className="m-0 text-lg leading-[1.9] text-text-2">{rv.body}</blockquote>
             <figcaption className="mt-auto flex flex-col border-t border-divider pt-4.5">
               <b>{rv.name}</b>
               <span className="text-sm text-muted">{rv.course}</span>
             </figcaption>
-            <div className="flex gap-2">
+            <div className={cn('flex gap-2', n < 2 && 'hidden')}>
               <button
                 type="button"
                 className={buttonClass({ variant: 'outline', size: 'sm' })}
@@ -669,7 +697,7 @@ function Testimonials() {
           <div className="flex flex-[1_1_320px] flex-col gap-3.5">
             {TESTIMONIALS.map((r, k) => (
               <button
-                key={r.head}
+                key={r.id}
                 type="button"
                 onClick={() => setI(k)}
                 className={cn(

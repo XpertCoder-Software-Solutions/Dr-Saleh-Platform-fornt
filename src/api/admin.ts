@@ -1,4 +1,4 @@
-import type { Course, CourseSummary, Gender, Pagination } from '@/types/api'
+import type { Course, CourseReview, CourseSummary, Gender, Pagination } from '@/types/api'
 import { api } from './client'
 import type { ConsultStatus } from './account'
 import type { Order, OrderStatus, PaymentStatus, ShippingStatus } from './shop'
@@ -409,4 +409,18 @@ export const catalogApi = {
   updateArticle: (id: string, fields: Record<string, FormValue>) =>
     api.patch<{ article: AdminArticle }>(`/admin/articles/${id}`, toFormData(fields), multipart),
   removeArticle: (id: string) => api.delete(`/admin/articles/${id}`),
+}
+
+// ---------- course reviews ----------
+
+export type AdminReview = CourseReview & {
+  user: { id: string; fullName: string; email: string; phoneNumber?: string | null } | null
+  course: { id: string; titleAr: string }
+}
+
+export const adminReviewsApi = {
+  list: (params: { page?: number; limit?: number; courseId?: string; isActive?: boolean; rating?: number }) =>
+    api.get<{ reviews: AdminReview[]; pagination: Pagination }>('/admin/course-reviews', { params }),
+  setActive: (id: string, isActive: boolean) =>
+    api.patch<{ review: AdminReview }>(`/admin/course-reviews/${id}`, { isActive }),
 }

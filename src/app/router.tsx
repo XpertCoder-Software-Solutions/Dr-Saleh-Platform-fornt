@@ -38,6 +38,7 @@ const adminPages = {
   AdminCourseEditPage: () => import('@/pages/admin/AdminCourseEditPage'),
   AdminCatalogPage: () => import('@/pages/admin/AdminCatalogPage'),
   AdminBlogPage: () => import('@/pages/admin/AdminBlogPage'),
+  AdminReviewsPage: () => import('@/pages/admin/AdminReviewsPage'),
   AdminSettingsPage: () => import('@/pages/admin/AdminSettingsPage'),
 }
 const admin = (name: keyof typeof adminPages) => page(adminPages[name], name)
@@ -139,6 +140,7 @@ export const router = createBrowserRouter([
       { path: 'courses/:id', lazy: admin('AdminCourseEditPage') },
       { path: 'catalog', lazy: admin('AdminCatalogPage') },
       { path: 'blog', lazy: admin('AdminBlogPage') },
+      { path: 'reviews', lazy: admin('AdminReviewsPage') },
       { path: 'settings', lazy: admin('AdminSettingsPage') },
       { path: '*', element: <NotFoundPage /> },
     ],
