@@ -67,6 +67,15 @@ unpaid order, record a refund, and for orders with physical items set the
 shipping status (preparing → shipped → delivered), carrier and tracking number.
 Students see those steps on their orders page and in the header bell.
 
+## Deploying (Vercel)
+
+The repo has a `vercel.json` (Vite build, every route rewritten to `index.html`
+for client-side routing). In the Vercel project set:
+
+- `VITE_API_URL` = the API URL including `/api` (for example `https://api.example.com/api`)
+
+and add the Vercel domain to the backend's `CORS_ALLOWED_ORIGINS`.
+
 ## Checks before pushing
 
 ```bash
