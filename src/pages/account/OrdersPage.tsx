@@ -131,13 +131,21 @@ function OrderRow({ order, open, onToggle }: { order: Order; open: boolean; onTo
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
           <b className="text-ink">
-            طلب <span dir="ltr">#{order.orderNumber}</span>
+            طلب{' '}
+            <span dir="ltr" className="whitespace-nowrap">
+              #{order.orderNumber}
+            </span>
           </b>
           <span className="truncate text-sm text-muted">
             {formatDate(order.createdAt)} · {orderKinds(order)}
           </span>
+          <StatusPill tone={st.tone} className="mt-1.5 self-start sm:hidden">
+            {st.label}
+          </StatusPill>
         </span>
-        <StatusPill tone={st.tone}>{st.label}</StatusPill>
+        <StatusPill tone={st.tone} className="max-sm:hidden">
+          {st.label}
+        </StatusPill>
         <b className="w-24 text-left font-head text-lg text-ink max-sm:hidden">
           {money(order, order.totalAmount)}
         </b>
@@ -182,12 +190,28 @@ function OrderRow({ order, open, onToggle }: { order: Order; open: boolean; onTo
           <div className="flex flex-col gap-3">
             <h3 className="text-base">حالة الطلب</h3>
             <Timeline order={order} />
+            {order.trackingNumber && (
+              <p className="flex items-center gap-2 text-sm text-text-2">
+                <Icon name="truck" size={15} className="text-blue-600" />
+                رقم الشحنة:{' '}
+                <b dir="ltr" className="text-ink">
+                  {order.trackingNumber}
+                </b>
+              </p>
+            )}
             {order.shippingAddress && (
               <p className="flex items-start gap-2 rounded-tile bg-surface p-3 text-sm text-text-2">
                 <Icon name="mapPin" size={15} className="mt-0.5 flex-none text-blue-600" />
                 {formatAddress(order.shippingAddress)}
               </p>
             )}
+            <Link
+              to={routes.invoice(order.id)}
+              target="_blank"
+              className={buttonClass({ variant: 'outline', size: 'sm', className: 'self-start' })}
+            >
+              <Icon name="download" size={15} /> تحميل الفاتورة
+            </Link>
             {pending && (
               <div className="flex flex-wrap gap-2.5">
                 <Link
@@ -233,10 +257,21 @@ function Timeline({ order }: { order: Order }) {
             },
   ]
   if (order.hasPhysicalItems && order.status !== 'CANCELLED' && order.status !== 'REFUNDED') {
+    const ship = order.shippingStatus
+    const shipped = ship === 'SHIPPED' || ship === 'DELIVERED'
     steps.push({
-      label: 'الشحن',
-      sub: paid ? 'هيوصلك خلال 2 لـ 4 أيام عمل' : 'بعد الدفع',
-      state: paid ? 'now' : 'todo',
+      label: shipped ? 'خرج للشحن' : 'بيتجهّز للشحن',
+      sub: shipped
+        ? [order.shippedAt && formatDate(order.shippedAt), order.shippingCarrier].filter(Boolean).join(' · ')
+        : paid
+          ? 'بيوصلك خلال 2 لـ 4 أيام عمل'
+          : 'بعد الدفع',
+      state: shipped ? 'done' : paid ? 'now' : 'todo',
+    })
+    steps.push({
+      label: 'تم التوصيل',
+      sub: ship === 'DELIVERED' && order.deliveredAt ? formatDate(order.deliveredAt) : undefined,
+      state: ship === 'DELIVERED' ? 'done' : ship === 'SHIPPED' ? 'now' : 'todo',
     })
   }
   return (

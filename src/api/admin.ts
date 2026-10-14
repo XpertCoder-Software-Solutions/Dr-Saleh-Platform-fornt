@@ -1,7 +1,7 @@
 import type { Course, CourseSummary, Gender, Pagination } from '@/types/api'
 import { api } from './client'
 import type { ConsultStatus } from './account'
-import type { Order, OrderStatus, PaymentStatus } from './shop'
+import type { Order, OrderStatus, PaymentStatus, ShippingStatus } from './shop'
 
 // Every admin query key starts with 'admin'.
 export const adminKeys = {
@@ -75,11 +75,21 @@ export interface AdminOrder extends Order {
 }
 
 export const adminOrdersApi = {
-  list: (q: { page?: number; limit?: number; status?: OrderStatus; paymentStatus?: PaymentStatus }) =>
-    api.get<{ items: AdminOrder[]; pagination: Pagination }>('/admin/orders', { params: q }),
+  list: (q: {
+    page?: number
+    limit?: number
+    status?: OrderStatus
+    paymentStatus?: PaymentStatus
+    shippingStatus?: ShippingStatus
+    search?: string
+  }) => api.get<{ items: AdminOrder[]; pagination: Pagination }>('/admin/orders', { params: q }),
   get: (id: string) => api.get<{ order: AdminOrder }>(`/admin/orders/${id}`),
   setStatus: (id: string, body: { status?: OrderStatus; paymentStatus?: PaymentStatus }) =>
     api.patch<{ order: AdminOrder }>(`/admin/orders/${id}/status`, body),
+  setShipping: (
+    id: string,
+    body: { shippingStatus?: ShippingStatus; trackingNumber?: string; shippingCarrier?: string },
+  ) => api.patch<{ order: AdminOrder }>(`/admin/orders/${id}/shipping`, body),
 }
 
 // ---------- consultation requests ----------

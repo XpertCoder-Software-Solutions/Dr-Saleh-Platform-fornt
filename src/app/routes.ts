@@ -38,6 +38,8 @@ export const routes = {
   /** Printable certificate (save as PDF from the print dialog). */
   certificatePrint: (id: string) => `/certificate/${id}`,
   orders: '/account/orders',
+  /** Printable invoice for an order (customer or admin). */
+  invoice: (orderId: string) => `/invoice/${orderId}`,
   wishlist: '/account/wishlist',
   profile: '/account/profile',
   referral: '/account/referral',

@@ -93,6 +93,7 @@ export const addressesApi = {
 
 export type OrderStatus = 'PENDING' | 'PAID' | 'CANCELLED' | 'REFUNDED'
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'CANCELLED'
+export type ShippingStatus = 'PREPARING' | 'SHIPPED' | 'DELIVERED'
 
 export interface OrderItem {
   id: string
@@ -119,6 +120,11 @@ export interface Order {
   hasPhysicalItems: boolean
   notes?: string | null
   paidAt?: string | null
+  shippingStatus?: ShippingStatus | null
+  trackingNumber?: string | null
+  shippingCarrier?: string | null
+  shippedAt?: string | null
+  deliveredAt?: string | null
   createdAt: string
   shippingAddress: Address | null
   items: OrderItem[]

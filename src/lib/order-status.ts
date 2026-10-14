@@ -2,10 +2,24 @@ import type { Order } from '@/api/shop'
 
 export type Tone = 'success' | 'warning' | 'danger' | 'info' | 'muted'
 
-/** Status pill for an order. The backend tracks payment, not shipping, so paid = done. */
-export function orderStatus(order: Pick<Order, 'status' | 'paymentStatus'>): { label: string; tone: Tone } {
+export const SHIPPING_LABEL = {
+  PREPARING: 'بيتجهّز',
+  SHIPPED: 'في الطريق',
+  DELIVERED: 'اتسلّم',
+} as const
+
+/** Status pill for an order: payment first, then shipping for paid orders with physical items. */
+export function orderStatus(
+  order: Pick<Order, 'status' | 'paymentStatus'> &
+    Partial<Pick<Order, 'hasPhysicalItems' | 'shippingStatus'>>,
+): { label: string; tone: Tone } {
   switch (order.status) {
     case 'PAID':
+      if (order.hasPhysicalItems) {
+        if (order.shippingStatus === 'DELIVERED') return { label: SHIPPING_LABEL.DELIVERED, tone: 'success' }
+        if (order.shippingStatus === 'SHIPPED') return { label: SHIPPING_LABEL.SHIPPED, tone: 'info' }
+        return { label: 'مدفوع · بيتجهّز', tone: 'success' }
+      }
       return { label: 'مدفوع', tone: 'success' }
     case 'CANCELLED':
       return { label: 'ملغي', tone: 'muted' }

@@ -164,10 +164,13 @@ export function AdminDashboardPage() {
               ))}
             </div>
           </div>
-          <div className="mt-6 flex h-56 items-end gap-2" aria-label="رسم الإيرادات">
+          <div className="mt-6 flex h-56 items-end gap-2 max-sm:gap-1" aria-label="رسم الإيرادات">
             {bars.map((b, i) => (
-              <div key={i} className="group flex h-full flex-1 flex-col items-center justify-end gap-2">
-                <span className="text-[11px] font-bold text-ink opacity-0 transition-opacity group-hover:opacity-100">
+              <div
+                key={i}
+                className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"
+              >
+                <span className="text-[11px] font-bold whitespace-nowrap text-ink opacity-0 transition-opacity group-hover:opacity-100 max-sm:hidden">
                   {formatEGP(b.value)}
                 </span>
                 <span
@@ -179,7 +182,15 @@ export function AdminDashboardPage() {
                   style={{ height: `${Math.max(3, (b.value / max) * 100)}%` }}
                   title={`${b.label}: ${formatEGP(b.value)}`}
                 />
-                <span className="text-[11px] whitespace-nowrap text-muted">{b.label}</span>
+                <span
+                  className={cn(
+                    'text-[11px] whitespace-nowrap text-muted',
+                    // On phones only every other label fits.
+                    (bars.length - 1 - i) % 2 === 1 && 'max-sm:invisible',
+                  )}
+                >
+                  {b.label}
+                </span>
               </div>
             ))}
           </div>

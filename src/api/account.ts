@@ -136,6 +136,7 @@ export interface MyConsultation {
   status: ConsultStatus
   scheduledAt: string | null
   createdAt: string
+  updatedAt?: string | null
   category: { id: string; nameAr: string } | null
 }
 

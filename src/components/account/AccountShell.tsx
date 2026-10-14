@@ -292,12 +292,21 @@ export function ProgressBar({ value, className }: { value: number; className?: s
 }
 
 /** Rounded status label ("مدفوع", "مؤكدة"…). */
-export function StatusPill({ tone, children }: { tone: Tone; children: ReactNode }) {
+export function StatusPill({
+  tone,
+  children,
+  className,
+}: {
+  tone: Tone
+  children: ReactNode
+  className?: string
+}) {
   return (
     <span
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap',
         TONE_CLASS[tone],
+        className,
       )}
     >
       <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />

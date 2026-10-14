@@ -10,6 +10,7 @@ import { buttonClass, inputClass } from '@/components/ui/button'
 import { ChoiceChips, TextField } from '@/components/ui/fields'
 import { Alert, EmptyState, ErrorState, Spinner } from '@/components/ui/States'
 import { cn } from '@/lib/cn'
+import { downloadCsv } from '@/lib/csv'
 import { formatDate, formatEGP, sinceLabel } from '@/lib/format'
 import { orderStatus } from '@/lib/order-status'
 import { usePageTitle } from '@/lib/usePageTitle'
@@ -47,6 +48,53 @@ export function AdminUsersPage() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
+  const [exporting, setExporting] = useState(false)
+
+  async function exportCsv() {
+    setExporting(true)
+    try {
+      const rows: Student[] = []
+      for (let p = 1; p <= 50; p++) {
+        const res = await studentsApi.list({
+          page: p,
+          limit: 100,
+          search: search.trim() || undefined,
+          isActive: tab === 'all' ? undefined : tab === 'active',
+        })
+        rows.push(...res.items)
+        if (p >= res.pagination.totalPages) break
+      }
+      downloadCsv(
+        `students-${new Date().toISOString().slice(0, 10)}.csv`,
+        [
+          'الاسم',
+          'الإيميل',
+          'الموبايل',
+          'النوع',
+          'الدورات',
+          'الطلبات',
+          'إجمالي المدفوع (ج.م)',
+          'انضم',
+          'آخر دخول',
+          'الحالة',
+        ],
+        rows.map((s) => [
+          s.fullName,
+          s.email,
+          s.phoneNumber,
+          s.gender === 'Female' ? 'أنثى' : s.gender === 'Male' ? 'ذكر' : '',
+          s.coursesCount,
+          s.ordersCount,
+          s.totalPaidEGP,
+          s.createdAt.slice(0, 10),
+          s.lastLoginAt?.slice(0, 10) ?? '',
+          s.isActive ? 'نشط' : 'موقوف',
+        ]),
+      )
+    } finally {
+      setExporting(false)
+    }
+  }
   const students = useQuery({
     queryKey: [...adminKeys.students, tab, page, search],
     queryFn: () =>
@@ -70,9 +118,29 @@ export function AdminUsersPage() {
             : undefined
         }
         actions={
-          <button type="button" className={buttonClass({ variant: 'navy' })} onClick={() => setAdding(true)}>
-            <Icon name="plus" size={16} /> إضافة طالب
-          </button>
+          <>
+            <button
+              type="button"
+              className={buttonClass({ variant: 'outline' })}
+              disabled={exporting}
+              onClick={exportCsv}
+            >
+              {exporting ? (
+                <Spinner />
+              ) : (
+                <>
+                  <Icon name="download" size={16} /> تصدير
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              className={buttonClass({ variant: 'navy' })}
+              onClick={() => setAdding(true)}
+            >
+              <Icon name="plus" size={16} /> إضافة طالب
+            </button>
+          </>
         }
       />
       <div className="grid grid-cols-[1fr_340px] items-start gap-6 max-xl:grid-cols-1">

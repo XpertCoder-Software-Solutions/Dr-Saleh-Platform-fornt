@@ -1,26 +1,34 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { routes } from '@/app/routes'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminKeys, adminOrdersApi, type AdminOrder } from '@/api/admin'
-import type { OrderStatus, PaymentStatus } from '@/api/shop'
+import type { OrderStatus, PaymentStatus, ShippingStatus } from '@/api/shop'
 import { AdminCard, AdminHeader } from '@/components/admin/AdminLayout'
 import { FilterTabs, StatusPill } from '@/components/account/AccountShell'
 import { Icon } from '@/components/ui/Icon'
 import { Pager } from '@/components/ui/Pager'
-import { buttonClass } from '@/components/ui/button'
-import { SelectField } from '@/components/ui/fields'
+import { buttonClass, inputClass } from '@/components/ui/button'
+import { SelectField, TextField } from '@/components/ui/fields'
 import { Alert, EmptyState, ErrorState, Spinner } from '@/components/ui/States'
 import { formatAddress } from '@/lib/address'
 import { cn } from '@/lib/cn'
 import { formatDate, formatEGP } from '@/lib/format'
-import { orderKinds, orderStatus } from '@/lib/order-status'
+import { SHIPPING_LABEL, orderKinds, orderStatus } from '@/lib/order-status'
+import { downloadCsv } from '@/lib/csv'
 import { usePageTitle } from '@/lib/usePageTitle'
 
-type Tab = 'all' | 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded'
+type Tab = 'all' | 'pending' | 'paid' | 'toShip' | 'shipped' | 'failed' | 'cancelled' | 'refunded'
 
-const TAB_QUERY: Record<Tab, { status?: OrderStatus; paymentStatus?: PaymentStatus }> = {
+const TAB_QUERY: Record<
+  Tab,
+  { status?: OrderStatus; paymentStatus?: PaymentStatus; shippingStatus?: ShippingStatus }
+> = {
   all: {},
   pending: { status: 'PENDING', paymentStatus: 'PENDING' },
   paid: { status: 'PAID' },
+  toShip: { status: 'PAID', shippingStatus: 'PREPARING' },
+  shipped: { status: 'PAID', shippingStatus: 'SHIPPED' },
   failed: { paymentStatus: 'FAILED' },
   cancelled: { status: 'CANCELLED' },
   refunded: { status: 'REFUNDED' },
@@ -39,19 +47,100 @@ export function AdminOrdersPage() {
   const [tab, setTab] = useState<Tab>('all')
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [exporting, setExporting] = useState(false)
+  const query = { ...TAB_QUERY[tab], search: search.trim() || undefined }
   const orders = useQuery({
-    queryKey: [...adminKeys.orders, tab, page],
-    queryFn: () => adminOrdersApi.list({ page, limit: 20, ...TAB_QUERY[tab] }),
+    queryKey: [...adminKeys.orders, tab, page, search],
+    queryFn: () => adminOrdersApi.list({ page, limit: 20, ...query }),
   })
+
+  async function exportCsv() {
+    setExporting(true)
+    try {
+      const rows: AdminOrder[] = []
+      for (let p = 1; p <= 50; p++) {
+        const res = await adminOrdersApi.list({ page: p, limit: 100, ...query })
+        rows.push(...res.items)
+        if (p >= res.pagination.totalPages) break
+      }
+      downloadCsv(
+        `orders-${new Date().toISOString().slice(0, 10)}.csv`,
+        [
+          'رقم الطلب',
+          'التاريخ',
+          'العميل',
+          'الموبايل',
+          'الإيميل',
+          'المحتوى',
+          'الإجمالي',
+          'العملة',
+          'الحالة',
+          'رقم الشحنة',
+        ],
+        rows.map((o) => [
+          o.orderNumber,
+          o.createdAt.slice(0, 10),
+          o.user?.fullName ?? '',
+          o.user?.phoneNumber ?? '',
+          o.user?.email ?? '',
+          o.items.map((i) => `${i.titleAr}${i.quantity > 1 ? ` × ${i.quantity}` : ''}`).join(' + '),
+          o.totalAmount,
+          o.currency,
+          orderStatus(o).label,
+          o.trackingNumber ?? '',
+        ]),
+      )
+    } finally {
+      setExporting(false)
+    }
+  }
   const list = orders.data?.items ?? []
   const current = list.find((o) => o.id === selected) ?? list[0]
 
   return (
     <>
-      <AdminHeader title="الطلبات" sub={orders.data ? `${orders.data.pagination.total} طلب` : undefined} />
+      <AdminHeader
+        title="الطلبات"
+        sub={orders.data ? `${orders.data.pagination.total} طلب` : undefined}
+        actions={
+          <button
+            type="button"
+            className={buttonClass({ variant: 'outline' })}
+            disabled={exporting}
+            onClick={exportCsv}
+          >
+            {exporting ? (
+              <Spinner />
+            ) : (
+              <>
+                <Icon name="download" size={16} /> تصدير Excel
+              </>
+            )}
+          </button>
+        }
+      />
       <div className="grid grid-cols-[1fr_340px] items-start gap-6 max-xl:grid-cols-1">
         <AdminCard className="overflow-hidden">
-          <div className="border-b border-divider p-4">
+          <div className="flex flex-col gap-3 border-b border-divider p-4">
+            <label className="relative w-72 max-sm:w-full">
+              <span className="sr-only">بحث</span>
+              <Icon
+                name="search"
+                size={15}
+                className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted"
+              />
+              <input
+                className={cn(inputClass, 'h-10 pr-10 text-sm')}
+                placeholder="رقم الطلب، اسم العميل، موبايل…"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setPage(1)
+                  setSelected(null)
+                }}
+              />
+            </label>
             <FilterTabs
               value={tab}
               onChange={(t) => {
@@ -63,6 +152,8 @@ export function AdminOrdersPage() {
                 { id: 'all', label: 'الكل' },
                 { id: 'pending', label: 'مستني الدفع' },
                 { id: 'paid', label: 'مدفوع' },
+                { id: 'toShip', label: 'بيتجهّز' },
+                { id: 'shipped', label: 'في الطريق' },
                 { id: 'failed', label: 'الدفع فشل' },
                 { id: 'cancelled', label: 'ملغي' },
                 { id: 'refunded', label: 'مسترد' },
@@ -143,22 +234,10 @@ export function AdminOrdersPage() {
 
 function OrderPanel({ order }: { order: AdminOrder }) {
   const queryClient = useQueryClient()
-  const [status, setStatus] = useState<OrderStatus>(order.status)
   const st = orderStatus(order)
   const save = useMutation({
-    mutationFn: () =>
-      adminOrdersApi.setStatus(order.id, {
-        status,
-        // Keep payment status consistent with the order status the admin picked.
-        paymentStatus:
-          status === 'PAID'
-            ? 'PAID'
-            : status === 'REFUNDED'
-              ? 'REFUNDED'
-              : status === 'CANCELLED'
-                ? 'CANCELLED'
-                : undefined,
-      }),
+    mutationFn: (status: 'CANCELLED' | 'REFUNDED') =>
+      adminOrdersApi.setStatus(order.id, { status, paymentStatus: status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin'] }),
   })
 
@@ -237,39 +316,116 @@ function OrderPanel({ order }: { order: AdminOrder }) {
       {order.notes && (
         <p className="rounded-tile bg-gold-soft p-3 text-sm text-gold-ink">ملاحظة العميل: {order.notes}</p>
       )}
-      <SelectField
-        label="غيّر الحالة"
-        value={status}
-        onChange={(e) => setStatus(e.target.value as OrderStatus)}
-        options={[
-          { value: 'PENDING', label: 'مستني الدفع' },
-          { value: 'PAID', label: 'مدفوع' },
-          { value: 'CANCELLED', label: 'ملغي' },
-          { value: 'REFUNDED', label: 'مسترد' },
-        ]}
-      />
-      {status === 'PAID' && order.status !== 'PAID' && (
+      {order.status === 'PAID' && order.hasPhysicalItems && <ShippingForm order={order} />}
+      <div className="flex flex-wrap gap-2.5">
+        <Link
+          to={routes.invoice(order.id)}
+          target="_blank"
+          className={buttonClass({ variant: 'outline', size: 'sm' })}
+        >
+          <Icon name="receipt" size={15} /> الفاتورة
+        </Link>
+        {order.status === 'PENDING' && order.paymentStatus !== 'PAID' && (
+          <button
+            type="button"
+            className={buttonClass({ variant: 'ghost', size: 'sm', className: 'text-danger' })}
+            disabled={save.isPending}
+            onClick={() => window.confirm('إلغاء الطلب؟') && save.mutate('CANCELLED')}
+          >
+            إلغاء الطلب
+          </button>
+        )}
+        {order.status === 'PAID' && (
+          <button
+            type="button"
+            className={buttonClass({ variant: 'ghost', size: 'sm', className: 'text-danger' })}
+            disabled={save.isPending}
+            onClick={() =>
+              window.confirm(
+                'تسجيل إن المبلغ اترد للعميل؟ (ده بيسجّل الحالة بس، الرد نفسه بيتعمل من بوابة الدفع)',
+              ) && save.mutate('REFUNDED')
+            }
+          >
+            تسجيل استرداد
+          </button>
+        )}
+      </div>
+      {order.status === 'PENDING' && (
         <p className="text-xs leading-relaxed text-muted">
-          تغيير الحالة لمدفوع بيسجّل الدفع بس، ومش بيفتح المحتوى. لو العميل دفع خارج المنصة، افتحله الدورات من
+          الطلب بيتعلّم مدفوع لوحده لما الدفع يتم من بوابة الدفع. لو العميل دفع خارج المنصة، افتحله المحتوى من
           صفحة المستخدمين.
         </p>
       )}
       {save.isError && <Alert tone="error">{(save.error as Error).message}</Alert>}
-      {save.isSuccess && <Alert tone="success">اتحفظت.</Alert>}
+    </AdminCard>
+  )
+}
+
+function ShippingForm({ order }: { order: AdminOrder }) {
+  const queryClient = useQueryClient()
+  const [f, setF] = useState({
+    shippingStatus: (order.shippingStatus ?? 'PREPARING') as ShippingStatus,
+    shippingCarrier: order.shippingCarrier ?? '',
+    trackingNumber: order.trackingNumber ?? '',
+  })
+  const dirty =
+    f.shippingStatus !== (order.shippingStatus ?? 'PREPARING') ||
+    f.shippingCarrier !== (order.shippingCarrier ?? '') ||
+    f.trackingNumber !== (order.trackingNumber ?? '') ||
+    !order.shippingStatus
+  const save = useMutation({
+    mutationFn: () =>
+      adminOrdersApi.setShipping(order.id, {
+        shippingStatus: f.shippingStatus,
+        shippingCarrier: f.shippingCarrier.trim() || undefined,
+        trackingNumber: f.trackingNumber.trim() || undefined,
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.orders }),
+  })
+  return (
+    <fieldset className="flex flex-col gap-3 rounded-tile border border-blue-300/50 bg-surface-blue/40 p-4">
+      <legend className="flex items-center gap-2 px-1 font-bold text-ink">
+        <Icon name="truck" size={16} /> الشحن
+      </legend>
+      <SelectField
+        label="حالة الشحن"
+        value={f.shippingStatus}
+        onChange={(e) => setF({ ...f, shippingStatus: e.target.value as ShippingStatus })}
+        options={(Object.keys(SHIPPING_LABEL) as ShippingStatus[]).map((k) => ({
+          value: k,
+          label: SHIPPING_LABEL[k],
+        }))}
+      />
+      <div className="grid grid-cols-2 gap-2.5">
+        <TextField
+          label="شركة الشحن"
+          placeholder="بوسطة"
+          value={f.shippingCarrier}
+          onChange={(e) => setF({ ...f, shippingCarrier: e.target.value })}
+        />
+        <TextField
+          label="رقم الشحنة"
+          ltr
+          value={f.trackingNumber}
+          onChange={(e) => setF({ ...f, trackingNumber: e.target.value })}
+        />
+      </div>
+      {(order.shippedAt || order.deliveredAt) && (
+        <p className="text-xs text-muted">
+          {order.shippedAt && `خرج ${formatDate(order.shippedAt)}`}
+          {order.deliveredAt && ` · اتسلّم ${formatDate(order.deliveredAt)}`}
+        </p>
+      )}
+      {save.isError && <Alert tone="error">{(save.error as Error).message}</Alert>}
+      {save.isSuccess && <Alert tone="success">اتحفظ، والعميل هيشوف الحالة في «طلباتي».</Alert>}
       <button
         type="button"
-        className={buttonClass({ variant: 'navy', block: true })}
-        disabled={status === order.status || save.isPending}
+        className={buttonClass({ variant: 'navy', size: 'sm' })}
+        disabled={!dirty || save.isPending}
         onClick={() => save.mutate()}
       >
-        {save.isPending ? (
-          <Spinner />
-        ) : (
-          <>
-            <Icon name="check" size={16} /> حفظ
-          </>
-        )}
+        {save.isPending ? <Spinner /> : 'حفظ الشحن'}
       </button>
-    </AdminCard>
+    </fieldset>
   )
 }

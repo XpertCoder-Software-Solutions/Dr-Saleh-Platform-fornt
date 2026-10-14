@@ -16,6 +16,7 @@ const accountPages = {
   MyBooksPage: () => import('@/pages/account/MyBooksPage'),
   ReaderPage: () => import('@/pages/account/ReaderPage'),
   CertificatePrintPage: () => import('@/pages/account/CertificatePrintPage'),
+  InvoicePage: () => import('@/pages/account/InvoicePage'),
   CertificatesPage: () => import('@/pages/account/CertificatesPage'),
   OrdersPage: () => import('@/pages/account/OrdersPage'),
   WishlistPage: () => import('@/pages/account/WishlistPage'),
@@ -144,6 +145,7 @@ export const router = createBrowserRouter([
   { path: 'learn/:courseId', lazy: account('PlayerPage') },
   { path: 'read/:formatId', lazy: account('ReaderPage') },
   { path: 'certificate/:id', lazy: account('CertificatePrintPage') },
+  { path: 'invoice/:orderId', lazy: account('InvoicePage') },
   { path: 'login', lazy: async () => ({ Component: (await import('@/pages/auth/LoginPage')).LoginPage }) },
   {
     path: 'register',

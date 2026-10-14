@@ -7,6 +7,8 @@ import { Icon, type IconName } from '@/components/ui/Icon'
 import { buttonClass } from '@/components/ui/button'
 import { routes } from '@/app/routes'
 import { cn } from '@/lib/cn'
+import { markSeen, readSeen, useActivity } from '@/lib/activity'
+import { sinceLabel } from '@/lib/format'
 
 const NAV = [
   { to: routes.home, label: 'الرئيسية', end: true },
@@ -55,6 +57,10 @@ export function Header() {
     staleTime: 60_000,
   })
   const cartCount = cartSummary?.itemsCount ?? 0
+  const activity = useActivity()
+  // Read once per render of the panel; "new" means newer than the last time the bell was opened.
+  const [seenAt, setSeenAt] = useState(() => (user ? readSeen(user.id) : 0))
+  const unread = activity.filter((a) => +new Date(a.at) > seenAt).length
 
   // Close panels on navigation, outside click and Escape.
   const [path, setPath] = useState(location.pathname)
@@ -161,9 +167,19 @@ export function Header() {
                 className={cn(iconBtn, panel === 'notif' && 'bg-hover')}
                 aria-label="الإشعارات"
                 aria-expanded={panel === 'notif'}
-                onClick={() => toggle('notif')}
+                onClick={() => {
+                  // Closing the bell marks everything as seen.
+                  if (panel === 'notif' && user) {
+                    markSeen(user.id)
+                    setSeenAt(readSeen(user.id))
+                  }
+                  toggle('notif')
+                }}
               >
                 <Icon name="bell" />
+                {unread > 0 && (
+                  <span className="absolute top-1.5 left-1.5 size-2.5 rounded-full border-2 border-white bg-danger-dot" />
+                )}
               </button>
               <span className="mx-1.5 h-6 w-px bg-line" aria-hidden="true" />
               <button
@@ -248,12 +264,47 @@ export function Header() {
         {panel === 'notif' && user && (
           <div role="dialog" aria-label="الإشعارات" className={cn(dropdown, 'left-27.5 w-95 p-3.5')}>
             <b className="px-1.5 pt-1 pb-2.5 font-head text-lg text-ink">الإشعارات</b>
-            <div className="flex flex-col items-center gap-2.5 px-3 py-7 text-[15px] text-muted">
-              <span className="flex size-13 items-center justify-center rounded-2xl bg-surface-blue text-blue-600">
-                <Icon name="bell" size={22} />
-              </span>
-              مفيش إشعارات جديدة دلوقتي
-            </div>
+            {activity.length === 0 ? (
+              <div className="flex flex-col items-center gap-2.5 px-3 py-7 text-[15px] text-muted">
+                <span className="flex size-13 items-center justify-center rounded-2xl bg-surface-blue text-blue-600">
+                  <Icon name="bell" size={22} />
+                </span>
+                مفيش إشعارات جديدة دلوقتي
+              </div>
+            ) : (
+              <ul className="flex flex-col">
+                {activity.map((a) => (
+                  <li key={a.id}>
+                    <Link
+                      to={a.to}
+                      className="flex items-start gap-3 rounded-xl px-2 py-2.5 text-ink hover:bg-hover"
+                    >
+                      <span
+                        className={cn(
+                          'flex size-9 flex-none items-center justify-center rounded-xl',
+                          a.tone === 'blue' && 'bg-surface-blue text-blue-600',
+                          a.tone === 'gold' && 'bg-gold-soft text-gold-ink',
+                          a.tone === 'green' && 'bg-[#E7F6EC] text-success',
+                          a.tone === 'red' && 'bg-red-50 text-danger',
+                        )}
+                      >
+                        <Icon name={a.icon} size={16} />
+                      </span>
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="text-sm leading-snug">{a.text}</span>
+                        <span className="text-xs text-muted">{sinceLabel(a.at)}</span>
+                      </span>
+                      {+new Date(a.at) > seenAt && (
+                        <span
+                          className="mt-1.5 size-2 flex-none rounded-full bg-blue-400"
+                          aria-label="جديد"
+                        />
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
       </header>
