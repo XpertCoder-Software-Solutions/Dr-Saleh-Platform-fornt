@@ -26,6 +26,7 @@ export const routes = {
   privacy: '/legal/privacy',
   terms: '/legal/terms',
   refunds: '/legal/refunds',
+  shipping: '/legal/shipping',
   dashboard: '/account',
   myCourses: '/account/courses',
   /** Course player; `lesson` opens a specific lesson. */

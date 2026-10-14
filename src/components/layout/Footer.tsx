@@ -130,8 +130,11 @@ export function Footer() {
           <Link to={routes.terms} className="text-on-dark-muted hover:text-white">
             الشروط والأحكام
           </Link>
+          <Link to={routes.shipping} className="text-on-dark-muted hover:text-white">
+            سياسة الشحن
+          </Link>
           <Link to={routes.refunds} className="text-on-dark-muted hover:text-white">
-            سياسة الاسترداد
+            الاستبدال والاسترجاع
           </Link>
           <Link to={routes.privacy} className="text-on-dark-muted hover:text-white">
             سياسة الخصوصية

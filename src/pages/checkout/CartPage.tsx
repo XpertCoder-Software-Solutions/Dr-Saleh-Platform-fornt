@@ -165,7 +165,7 @@ export function CartPage() {
                       </span>
                       {text === 'استرجاع حسب سياسة الاسترداد' ? (
                         <span>
-                          استرجاع حسب <Link to={routes.refunds}>سياسة الاسترداد</Link>
+                          استرجاع حسب <Link to={routes.refunds}>سياسة الاستبدال والاسترجاع</Link>
                         </span>
                       ) : (
                         text

@@ -9,12 +9,27 @@ import { buttonClass, eyebrowClass, innerClass, sectionClass } from '@/component
 import { cn } from '@/lib/cn'
 import { usePageTitle } from '@/lib/usePageTitle'
 import { CHANNELS } from '@/pages/home/channels'
+import { SOCIAL } from '@/content/contact'
 
 const CREDENTIALS: { icon: IconName; text: string }[] = [
   { icon: 'user', text: 'المستشار النفسي والتربوي' },
   { icon: 'home', text: 'رئيس مركز السعادة للاستشارات النفسية والتربوية' },
   { icon: 'video', text: 'مقدّم برنامج «فن التربية» على قناة الرحمة' },
   { icon: 'book', text: 'مؤلف كتاب «فن تربية الأبناء»' },
+]
+
+// Topics from his «فن التربية» episodes on Al-Rahma TV.
+const TOPICS = [
+  'التربية بالثواب والعقاب',
+  'علاج الكذب عند الأبناء',
+  'فرط الحركة',
+  'العناد',
+  'خناقات الإخوات',
+  'ضعف الشخصية والثقة بالنفس',
+  'الحوار والاستماع للأبناء',
+  'الفجوة بين الأجيال',
+  'أخطاء شائعة في التربية',
+  'السعادة الزوجية',
 ]
 
 const IDEAS: { icon: IconName; title: string; body: string }[] = [
@@ -56,10 +71,18 @@ export function AboutPage() {
               «مش مطلوب إن ابنك يكون مثالي… المطلوب إنه يكون{' '}
               <span className="uline text-ink-grad">سوي، واثق في نفسه</span>، وقادر يتكيّف مع الدنيا.»
             </h2>
-            {/* TODO(Amr): Dr. Saleh's real story: years of experience, studies, how he started. */}
             <p className="text-[17px] leading-[1.9] text-text-2">
-              بيقدّم برامج في التربية الإيجابية والبناء النفسي للأطفال والمراهقين، وبيركّز على الخطوات العملية
-              اللي تقدر تطبقها في البيت من غير مصطلحات معقدة.
+              من سنين والدكتور صالح عبد الكريم بيدخل بيوت الأسر العربية من خلال برنامج «فن التربية» على قناة
+              الرحمة، اللي بيرد فيه على أسئلة الأهالي عن مشاكل ولادهم اليومية: الكذب، والعناد، وفرط الحركة،
+              وخناقات الإخوات، والثواب والعقاب.
+            </p>
+            <p className="text-[17px] leading-[1.9] text-text-2">
+              كمستشار نفسي وتربوي ورئيس مركز السعادة للاستشارات النفسية والتربوية، أسلوبه بيبدأ بالفهم
+              والحوار، وبيقدّم لكل مشكلة خطوات عملية بسيطة تقدر تطبقها في البيت من غير مصطلحات معقدة.
+            </p>
+            <p className="text-[17px] leading-[1.9] text-text-2">
+              المنصة دي بتجمع خبرته في مكان واحد: دورات مسجّلة تتفرج عليها في الوقت اللي يناسبك، وكتب،
+              ومقالات، واستشارات خاصة لو محتاج حد يسمعك ويرشدك في موقف معيّن.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link to={routes.consultation} className={buttonClass({ variant: 'gold' })}>
@@ -106,6 +129,38 @@ export function AboutPage() {
                 <b className="font-head text-xl text-ink">{idea.title}</b>
                 <p className="leading-relaxed text-muted">{idea.body}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className={sectionClass}>
+        <div className={innerClass}>
+          <SectionHeader center eyebrow="فن التربية" icon="video" title="مواضيع بيتكلم فيها" />
+          <p className="-mt-4 mb-7 text-center text-muted">
+            من حلقات برنامج «فن التربية» على قناة الرحمة، وكتير منها موجود على قناته على يوتيوب.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2.5">
+            {TOPICS.map((topic) => (
+              <span
+                key={topic}
+                className="rounded-full border border-line bg-white px-4.5 py-2.5 font-semibold text-ink"
+              >
+                {topic}
+              </span>
+            ))}
+          </div>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            {SOCIAL.map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonClass({ variant: 'outline', size: 'sm' })}
+              >
+                <Icon name={s.icon} size={16} /> {s.label}
+              </a>
             ))}
           </div>
         </div>

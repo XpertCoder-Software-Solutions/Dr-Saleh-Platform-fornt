@@ -12,6 +12,7 @@ import { NotificationItem } from '@/components/account/NotificationItem'
 
 const NAV = [
   { to: routes.home, label: 'الرئيسية', end: true },
+  { to: routes.about, label: 'عن د. صالح' },
   { to: routes.courses, label: 'الدورات' },
   { to: routes.library, label: 'المكتبة' },
   { to: routes.store, label: 'المتجر' },

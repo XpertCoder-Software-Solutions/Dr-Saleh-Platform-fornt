@@ -22,7 +22,7 @@ function prefersReducedMotion() {
  */
 export function useTypewriter(
   words: readonly string[],
-  { typeMs = 95, eraseMs = 45, holdMs = 1700, gapMs = 350 }: Options = {},
+  { typeMs = 55, eraseMs = 25, holdMs = 1300, gapMs = 200 }: Options = {},
 ) {
   const [state, setState] = useState({ index: 0, length: 0, erasing: false })
   const [reduced] = useState(prefersReducedMotion)

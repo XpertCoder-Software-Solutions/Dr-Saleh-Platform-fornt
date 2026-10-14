@@ -1,64 +1,14 @@
 import { Link, NavLink, useParams } from 'react-router-dom'
 import { routes } from '@/app/routes'
 import { PageHero } from '@/components/layout/PageHero'
-import { Icon, type IconName } from '@/components/ui/Icon'
+import { Icon } from '@/components/ui/Icon'
 import { innerClass, sectionClass } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 import { usePageTitle } from '@/lib/usePageTitle'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { POLICIES, POLICIES_UPDATED, type Policy } from './policies'
 
-// TODO(Amr): draft texts from the design; they need a lawyer's review and the
-// bracketed values filled in before launch.
-const DOCS: Record<string, { title: string; icon: IconName; sections: [string, string][] }> = {
-  terms: {
-    title: 'الشروط والأحكام',
-    icon: 'file',
-    sections: [
-      ['استخدام المنصة', 'باستخدامك للمنصة انت موافق على الشروط دي. الحساب شخصي، وممنوع مشاركته مع حد تاني.'],
-      [
-        'المحتوى وحقوق الملكية',
-        'كل الدورات والكتب والمقالات ملك المنصة ود. صالح عبد الكريم، وممنوع تسجيلها أو إعادة نشرها.',
-      ],
-      [
-        'الدفع',
-        'الأسعار بالجنيه المصري وشاملة الضرايب. الدفع متاح بـ Apple Pay والمحافظ الإلكترونية والكروت البنكية وPayPal.',
-      ],
-      ['الشهادات', 'الشهادة بتطلع بعد إكمال الدورة، ولكل شهادة رقم تحقق.'],
-    ],
-  },
-  refunds: {
-    title: 'سياسة الاسترداد',
-    icon: 'refresh',
-    sections: [
-      [
-        'الدورات',
-        'تقدر تطلب استرداد خلال [عدد] أيام من الشراء، بشرط إنك متكونش شفت أكتر من [نسبة] من الدورة.',
-      ],
-      [
-        'الكتب الرقمية والصوتية',
-        'المنتجات الرقمية مش بتترد بعد ما تتفتح، إلا لو فيه مشكلة تقنية مقدرناش نحلها.',
-      ],
-      [
-        'المنتجات والكتب الورقية',
-        'تقدر ترجّع المنتج خلال 14 يوم من الاستلام لو لسه في حالته الأصلية. مصاريف الشحن عليك إلا لو المنتج فيه عيب.',
-      ],
-      [
-        'الاستشارات',
-        'تقدر تأجّل الميعاد مرة مجانًا قبلها بـ 24 ساعة. الإلغاء قبلها بـ 48 ساعة بيرجعلك المبلغ كامل.',
-      ],
-    ],
-  },
-  privacy: {
-    title: 'سياسة الخصوصية',
-    icon: 'shield',
-    sections: [
-      ['البيانات اللي بنجمعها', 'الاسم، ورقم الموبايل، والإيميل، وبيانات الطلبات، وتقدّمك في الدورات.'],
-      ['بنستخدمها في إيه', 'عشان نفتحلك المحتوى، ونبعتلك تأكيدات الطلبات والمواعيد، ونحسّن المنصة.'],
-      ['الدفع', 'بيانات الكارت مش بتتحفظ عندنا، الدفع بيتم عن طريق بوابة دفع آمنة.'],
-      ['الاستشارات', 'كل اللي بتحكيه في الاستشارة سري، ومحدش بيشوفه غير الدكتور.'],
-    ],
-  },
-}
+const DOCS: Record<string, Policy> = POLICIES
 
 export function LegalPage() {
   const { doc = 'terms' } = useParams()
@@ -76,7 +26,7 @@ export function LegalPage() {
             الشروط <span className="text-sheen">والسياسات</span>
           </>
         }
-        body="كل اللي محتاج تعرفه عن استخدام المنصة، والاسترداد، وخصوصية بياناتك، بكلام واضح."
+        body="كل اللي محتاج تعرفه عن استخدام المنصة، والشحن، والاستبدال والاسترجاع، وخصوصية بياناتك، بكلام واضح."
       />
       <section className={cn(sectionClass, 'relative z-2 -mt-12')}>
         <div className={cn(innerClass, 'grid grid-cols-[260px_1fr] items-start gap-7 max-md:grid-cols-1')}>
@@ -107,19 +57,35 @@ export function LegalPage() {
           </nav>
           <article className="rounded-card bg-white p-8 shadow-[0_30px_60px_-36px_rgba(12,42,74,.5)] max-sm:p-5">
             <h2 className="text-[30px]">{current.title}</h2>
-            <p className="my-4 flex items-center gap-2 rounded-xl border border-gold-light bg-gold-soft px-4 py-2.5 text-sm text-gold-ink">
-              <Icon name="alert" size={16} /> نص مبدئي، لازم يتراجع من محامي قبل النشر.
-            </p>
+            <p className="mt-2 leading-relaxed text-text-2">{current.summary}</p>
+            <p className="mt-2 mb-2 text-sm text-muted">آخر تحديث: {POLICIES_UPDATED}</p>
             <ol className="flex flex-col">
-              {current.sections.map(([h, p], i) => (
-                <li key={h} className="border-t border-divider py-5">
+              {current.sections.map((sec, i) => (
+                <li key={sec.title} className="border-t border-divider py-5">
                   <h3 className="flex items-center gap-3 text-xl">
-                    <span className="flex size-7 items-center justify-center rounded-lg bg-surface-blue text-sm text-blue-600">
+                    <span className="flex size-7 flex-none items-center justify-center rounded-lg bg-surface-blue text-sm text-blue-600">
                       {i + 1}
                     </span>
-                    {h}
+                    {sec.title}
                   </h3>
-                  <p className="mt-2 leading-loose text-text-2">{p}</p>
+                  {sec.body.map((para) => (
+                    <p key={para} className="mt-2 leading-loose text-text-2">
+                      {para}
+                    </p>
+                  ))}
+                  {sec.list && (
+                    <ul className="mt-2 flex flex-col gap-1.5">
+                      {sec.list.map((item) => (
+                        <li key={item} className="flex gap-2.5 leading-loose text-text-2">
+                          <span
+                            className="mt-3 size-1.5 flex-none rounded-full bg-blue-400"
+                            aria-hidden="true"
+                          />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ol>
