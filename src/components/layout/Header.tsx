@@ -26,6 +26,7 @@ const ACCOUNT_MENU: { to: string; label: string; icon: IconName }[] = [
   { to: routes.certificates, label: 'شهاداتي', icon: 'award' },
   { to: routes.orders, label: 'طلباتي', icon: 'receipt' },
   { to: routes.wishlist, label: 'المفضلة', icon: 'heart' },
+  { to: routes.myConsultations, label: 'استشاراتي', icon: 'chat' },
   { to: routes.profile, label: 'الملف الشخصي', icon: 'user' },
 ]
 

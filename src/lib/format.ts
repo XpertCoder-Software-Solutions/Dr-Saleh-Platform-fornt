@@ -64,3 +64,19 @@ export function minutesLabel(n: number): string {
   if (n <= 10) return `${n} دقائق`
   return `${n} دقيقة`
 }
+
+/** "النهارده" / "من 4 أيام" / "من أسبوعين" */
+export function sinceLabel(iso: string | null | undefined) {
+  if (!iso) return null
+  const days = Math.round((Date.now() - new Date(iso).getTime()) / 86_400_000)
+  if (days <= 0) return 'النهارده'
+  if (days === 1) return 'امبارح'
+  if (days < 7) return `من ${days} أيام`
+  if (days < 14) return 'من أسبوع'
+  if (days < 30) return 'من أسبوعين'
+  const months = Math.round(days / 30)
+  if (months <= 1) return 'من شهر'
+  if (months === 2) return 'من شهرين'
+  if (months <= 10) return `من ${months} شهور`
+  return `من ${months} شهر`
+}

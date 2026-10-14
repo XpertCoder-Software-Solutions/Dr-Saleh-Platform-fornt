@@ -28,11 +28,19 @@ export const routes = {
   refunds: '/legal/refunds',
   dashboard: '/account',
   myCourses: '/account/courses',
+  /** Course player; `lesson` opens a specific lesson. */
+  learn: (courseId: string, lessonId?: string) =>
+    `/learn/${courseId}${lessonId ? `?lesson=${lessonId}` : ''}`,
   myBooks: '/account/books',
+  /** Digital reader or audio player for an owned book format. */
+  read: (formatId: string) => `/read/${formatId}`,
   certificates: '/account/certificates',
+  /** Printable certificate (save as PDF from the print dialog). */
+  certificatePrint: (id: string) => `/certificate/${id}`,
   orders: '/account/orders',
   wishlist: '/account/wishlist',
   profile: '/account/profile',
   referral: '/account/referral',
+  myConsultations: '/account/consultations',
   admin: '/admin',
 } as const

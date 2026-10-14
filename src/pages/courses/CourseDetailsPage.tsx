@@ -460,7 +460,10 @@ function BuyCard({
       {isOwned ? (
         <div className="flex flex-col gap-3">
           <Alert tone="success">الدورة دي في حسابك بالفعل.</Alert>
-          <Link to={routes.myCourses} className={buttonClass({ variant: 'gold', size: 'lg', block: true })}>
+          <Link
+            to={routes.learn(course.id)}
+            className={buttonClass({ variant: 'gold', size: 'lg', block: true })}
+          >
             {t('cta.continue')}
           </Link>
         </div>

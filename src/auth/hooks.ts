@@ -25,3 +25,16 @@ export function useCopy() {
     [audience, user?.firstName],
   )
 }
+
+/**
+ * Inline gendered wording for one-off strings: `g('كمّل', 'كمّلي', 'استكمل')`.
+ * Users without a gender get the neutral form (or the masculine one when none is given).
+ */
+export function useGender() {
+  const audience = useAudience()
+  return useCallback(
+    (male: string, female: string, neutral?: string) =>
+      audience === 'female' ? female : audience === 'male' ? male : (neutral ?? male),
+    [audience],
+  )
+}

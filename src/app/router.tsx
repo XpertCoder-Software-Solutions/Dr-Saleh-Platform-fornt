@@ -6,10 +6,24 @@ import { HomePage } from '@/pages/home/HomePage'
 import { ComingSoonPage, NotFoundPage } from '@/pages/NotFoundPage'
 
 // Pages from the design that come in the next phases.
-const soon: [string, string][] = [
-  ['account/*', 'حسابي'],
-  ['admin/*', 'لوحة التحكم'],
-]
+const soon: [string, string][] = [['admin/*', 'لوحة التحكم']]
+
+// Account pages (each its own chunk), all behind login.
+const accountPages = {
+  DashboardPage: () => import('@/pages/account/DashboardPage'),
+  MyCoursesPage: () => import('@/pages/account/MyCoursesPage'),
+  PlayerPage: () => import('@/pages/account/PlayerPage'),
+  MyBooksPage: () => import('@/pages/account/MyBooksPage'),
+  ReaderPage: () => import('@/pages/account/ReaderPage'),
+  CertificatePrintPage: () => import('@/pages/account/CertificatePrintPage'),
+  CertificatesPage: () => import('@/pages/account/CertificatesPage'),
+  OrdersPage: () => import('@/pages/account/OrdersPage'),
+  WishlistPage: () => import('@/pages/account/WishlistPage'),
+  MyConsultationsPage: () => import('@/pages/account/MyConsultationsPage'),
+  ReferralPage: () => import('@/pages/account/ReferralPage'),
+  ProfilePage: () => import('@/pages/account/ProfilePage'),
+}
+const account = (name: keyof typeof accountPages) => authPage(accountPages[name], name)
 
 /** Lazy route: the page's module is fetched on first visit. */
 function page(load: () => Promise<Record<string, unknown>>, name: string) {
@@ -78,10 +92,23 @@ export const router = createBrowserRouter([
       { path: 'checkout', lazy: authPage(() => import('@/pages/checkout/CheckoutPage'), 'CheckoutPage') },
       { path: 'checkout/pay/:orderId', lazy: authPage(() => import('@/pages/checkout/PayPage'), 'PayPage') },
       { path: 'checkout/result', lazy: authPage(() => import('@/pages/checkout/ResultPage'), 'ResultPage') },
+      { path: 'account', lazy: account('DashboardPage') },
+      { path: 'account/courses', lazy: account('MyCoursesPage') },
+      { path: 'account/books', lazy: account('MyBooksPage') },
+      { path: 'account/certificates', lazy: account('CertificatesPage') },
+      { path: 'account/orders', lazy: account('OrdersPage') },
+      { path: 'account/wishlist', lazy: account('WishlistPage') },
+      { path: 'account/consultations', lazy: account('MyConsultationsPage') },
+      { path: 'account/referral', lazy: account('ReferralPage') },
+      { path: 'account/profile', lazy: account('ProfilePage') },
       ...soon.map(([path, title]) => ({ path, element: <ComingSoonPage title={title} /> })),
       { path: '*', element: <NotFoundPage /> },
     ],
   },
+  // Full-screen learning views (no site header/footer).
+  { path: 'learn/:courseId', lazy: account('PlayerPage') },
+  { path: 'read/:formatId', lazy: account('ReaderPage') },
+  { path: 'certificate/:id', lazy: account('CertificatePrintPage') },
   { path: 'login', lazy: async () => ({ Component: (await import('@/pages/auth/LoginPage')).LoginPage }) },
   {
     path: 'register',
