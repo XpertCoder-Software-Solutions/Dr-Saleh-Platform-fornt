@@ -20,7 +20,16 @@ import { TONE_CLASS, type Tone } from '@/lib/order-status'
 import { usePageTitle } from '@/lib/usePageTitle'
 
 export type AccountSection =
-  'dashboard' | 'courses' | 'books' | 'certs' | 'orders' | 'wishlist' | 'consults' | 'referral' | 'profile'
+  | 'dashboard'
+  | 'courses'
+  | 'books'
+  | 'certs'
+  | 'orders'
+  | 'wishlist'
+  | 'consults'
+  | 'notifications'
+  | 'referral'
+  | 'profile'
 
 const NAV: { id: AccountSection; label: string; to: string; icon: IconName; end?: boolean }[] = [
   { id: 'dashboard', label: 'نظرة عامة', to: routes.dashboard, icon: 'grid', end: true },
@@ -30,6 +39,7 @@ const NAV: { id: AccountSection; label: string; to: string; icon: IconName; end?
   { id: 'orders', label: 'طلباتي', to: routes.orders, icon: 'receipt' },
   { id: 'wishlist', label: 'المفضلة', to: routes.wishlist, icon: 'heart' },
   { id: 'consults', label: 'استشاراتي', to: routes.myConsultations, icon: 'chat' },
+  { id: 'notifications', label: 'الإشعارات', to: routes.notifications, icon: 'bell' },
   { id: 'referral', label: 'ادعُ صديق', to: routes.referral, icon: 'heartHand' },
   { id: 'profile', label: 'الملف الشخصي', to: routes.profile, icon: 'user' },
 ]

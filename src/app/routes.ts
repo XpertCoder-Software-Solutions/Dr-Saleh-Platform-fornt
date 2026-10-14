@@ -44,6 +44,7 @@ export const routes = {
   profile: '/account/profile',
   referral: '/account/referral',
   myConsultations: '/account/consultations',
+  notifications: '/account/notifications',
   admin: '/admin',
   adminCourses: '/admin/courses',
   adminCourse: (id: string) => `/admin/courses/${id}`,

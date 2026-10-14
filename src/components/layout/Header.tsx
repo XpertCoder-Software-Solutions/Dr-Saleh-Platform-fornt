@@ -7,8 +7,8 @@ import { Icon, type IconName } from '@/components/ui/Icon'
 import { buttonClass } from '@/components/ui/button'
 import { routes } from '@/app/routes'
 import { cn } from '@/lib/cn'
-import { markSeen, readSeen, useActivity } from '@/lib/activity'
-import { sinceLabel } from '@/lib/format'
+import { useActivity, useReadState } from '@/lib/activity'
+import { NotificationItem } from '@/components/account/NotificationItem'
 
 const NAV = [
   { to: routes.home, label: 'الرئيسية', end: true },
@@ -57,10 +57,9 @@ export function Header() {
     staleTime: 60_000,
   })
   const cartCount = cartSummary?.itemsCount ?? 0
-  const activity = useActivity()
-  // Read once per render of the panel; "new" means newer than the last time the bell was opened.
-  const [seenAt, setSeenAt] = useState(() => (user ? readSeen(user.id) : 0))
-  const unread = activity.filter((a) => +new Date(a.at) > seenAt).length
+  const { items: activity } = useActivity()
+  const { isUnread, markRead, markAllRead } = useReadState()
+  const unread = activity.filter(isUnread).length
 
   // Close panels on navigation, outside click and Escape.
   const [path, setPath] = useState(location.pathname)
@@ -165,20 +164,15 @@ export function Header() {
               <button
                 type="button"
                 className={cn(iconBtn, panel === 'notif' && 'bg-hover')}
-                aria-label="الإشعارات"
+                aria-label={unread ? `الإشعارات، ${unread} جديد` : 'الإشعارات'}
                 aria-expanded={panel === 'notif'}
-                onClick={() => {
-                  // Closing the bell marks everything as seen.
-                  if (panel === 'notif' && user) {
-                    markSeen(user.id)
-                    setSeenAt(readSeen(user.id))
-                  }
-                  toggle('notif')
-                }}
+                onClick={() => toggle('notif')}
               >
                 <Icon name="bell" />
                 {unread > 0 && (
-                  <span className="absolute top-1.5 left-1.5 size-2.5 rounded-full border-2 border-white bg-danger-dot" />
+                  <span className="absolute top-0.75 left-0.75 flex h-4.25 min-w-4.25 items-center justify-center rounded-full border-2 border-white bg-danger-dot px-1 text-[11px] font-bold text-white">
+                    {unread}
+                  </span>
                 )}
               </button>
               <span className="mx-1.5 h-6 w-px bg-line" aria-hidden="true" />
@@ -263,7 +257,19 @@ export function Header() {
 
         {panel === 'notif' && user && (
           <div role="dialog" aria-label="الإشعارات" className={cn(dropdown, 'left-27.5 w-95 p-3.5')}>
-            <b className="px-1.5 pt-1 pb-2.5 font-head text-lg text-ink">الإشعارات</b>
+            <div className="flex items-center justify-between px-1.5 pt-1 pb-2.5">
+              <b className="font-head text-lg text-ink">الإشعارات</b>
+              {unread > 0 && (
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  className="flex items-center gap-1.5 rounded-lg border-0 bg-transparent px-2 py-1 text-sm font-bold text-blue-600 hover:bg-hover"
+                >
+                  <Icon name="check" size={15} />
+                  تعليم الكل كمقروء
+                </button>
+              )}
+            </div>
             {activity.length === 0 ? (
               <div className="flex flex-col items-center gap-2.5 px-3 py-7 text-[15px] text-muted">
                 <span className="flex size-13 items-center justify-center rounded-2xl bg-surface-blue text-blue-600">
@@ -272,39 +278,21 @@ export function Header() {
                 مفيش إشعارات جديدة دلوقتي
               </div>
             ) : (
-              <ul className="flex flex-col">
+              <ul className="flex max-h-[60vh] flex-col gap-0.5 overflow-y-auto">
                 {activity.map((a) => (
                   <li key={a.id}>
-                    <Link
-                      to={a.to}
-                      className="flex items-start gap-3 rounded-xl px-2 py-2.5 text-ink hover:bg-hover"
-                    >
-                      <span
-                        className={cn(
-                          'flex size-9 flex-none items-center justify-center rounded-xl',
-                          a.tone === 'blue' && 'bg-surface-blue text-blue-600',
-                          a.tone === 'gold' && 'bg-gold-soft text-gold-ink',
-                          a.tone === 'green' && 'bg-[#E7F6EC] text-success',
-                          a.tone === 'red' && 'bg-red-50 text-danger',
-                        )}
-                      >
-                        <Icon name={a.icon} size={16} />
-                      </span>
-                      <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="text-sm leading-snug">{a.text}</span>
-                        <span className="text-xs text-muted">{sinceLabel(a.at)}</span>
-                      </span>
-                      {+new Date(a.at) > seenAt && (
-                        <span
-                          className="mt-1.5 size-2 flex-none rounded-full bg-blue-400"
-                          aria-label="جديد"
-                        />
-                      )}
-                    </Link>
+                    <NotificationItem item={a} unread={isUnread(a)} onRead={() => markRead(a.id)} />
                   </li>
                 ))}
               </ul>
             )}
+            <Link
+              to={routes.notifications}
+              className="mt-2 flex min-h-11 items-center justify-center gap-1.5 rounded-xl border-t border-divider pt-2 text-sm font-bold text-blue-600 hover:text-blue-600"
+            >
+              عرض كل الإشعارات
+              <Icon name="chevLeft" size={16} />
+            </Link>
           </div>
         )}
       </header>
