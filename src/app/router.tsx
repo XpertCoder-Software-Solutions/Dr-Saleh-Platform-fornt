@@ -32,6 +32,8 @@ const adminPages = {
   AdminConsultRequestsPage: () => import('@/pages/admin/AdminConsultRequestsPage'),
   AdminSchedulePage: () => import('@/pages/admin/AdminSchedulePage'),
   AdminUsersPage: () => import('@/pages/admin/AdminUsersPage'),
+  AdminCoursesPage: () => import('@/pages/admin/AdminCoursesPage'),
+  AdminCourseEditPage: () => import('@/pages/admin/AdminCourseEditPage'),
 }
 const admin = (name: keyof typeof adminPages) => page(adminPages[name], name)
 
@@ -127,6 +129,8 @@ export const router = createBrowserRouter([
       { path: 'consult-requests', lazy: admin('AdminConsultRequestsPage') },
       { path: 'schedule', lazy: admin('AdminSchedulePage') },
       { path: 'users', lazy: admin('AdminUsersPage') },
+      { path: 'courses', lazy: admin('AdminCoursesPage') },
+      { path: 'courses/:id', lazy: admin('AdminCourseEditPage') },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

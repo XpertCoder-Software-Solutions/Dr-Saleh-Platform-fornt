@@ -1,4 +1,4 @@
-import type { Gender, Pagination } from '@/types/api'
+import type { Course, CourseSummary, Gender, Pagination } from '@/types/api'
 import { api } from './client'
 import type { ConsultStatus } from './account'
 import type { Order, OrderStatus, PaymentStatus } from './shop'
@@ -168,9 +168,98 @@ export const studentsApi = {
 
 // ---------- courses ----------
 
+export interface CourseInput {
+  categoryId: string
+  titleAr: string
+  titleEn: string
+  shortDescriptionAr: string
+  shortDescriptionEn: string
+  descriptionAr: string
+  descriptionEn: string
+  promoVideoUrl?: string
+  priceEGP: number
+  priceUSD: number
+  discountPriceEGP?: number | null
+  discountPriceUSD?: number | null
+  certificateEnabled?: boolean
+  isFeatured?: boolean
+  isHomeDisplay?: boolean
+  isActive?: boolean
+}
+
+export interface LessonPatch {
+  titleAr?: string
+  titleEn?: string
+  isPreview?: boolean
+  isActive?: boolean
+  displayOrder?: number
+}
+
+const multipart = { headers: { 'Content-Type': 'multipart/form-data' } }
+
 export const adminCoursesApi = {
   list: (q: { page?: number; limit?: number; search?: string } = {}) =>
-    api.get<{ courses: import('@/types/api').CourseSummary[]; pagination: Pagination }>('/admin/courses', {
+    api.get<{ courses: CourseSummary[]; pagination: Pagination }>('/admin/courses', {
       params: { limit: 100, ...q },
     }),
+  get: (id: string) => api.get<Course>(`/admin/courses/${id}`),
+  categories: () => api.get<{ id: string; nameAr: string; isActive: boolean }[]>('/admin/course-categories'),
+  create: (body: CourseInput) => api.post<{ course: Course }>('/admin/courses', body),
+  update: (id: string, body: Partial<CourseInput>) =>
+    api.patch<{ course: Course }>(`/admin/courses/${id}`, body),
+  remove: (id: string) => api.delete(`/admin/courses/${id}`),
+  uploadThumbnail: (id: string, file: File) => {
+    const form = new FormData()
+    form.append('thumbnailImage', file)
+    return api.post<{ course: Course }>(`/admin/courses/${id}/thumbnail`, form, multipart)
+  },
+  addSection: (courseId: string, body: { titleAr: string; titleEn: string; displayOrder: number }) =>
+    api.post(`/admin/courses/${courseId}/sections`, body),
+  updateSection: (id: string, body: { titleAr?: string; titleEn?: string; isActive?: boolean }) =>
+    api.patch(`/admin/sections/${id}`, body),
+  removeSection: (id: string) => api.delete(`/admin/sections/${id}`),
+  addLesson: (
+    sectionId: string,
+    input: {
+      titleAr: string
+      titleEn: string
+      displayOrder: number
+      isPreview: boolean
+      durationSeconds?: number
+    },
+    files: { video?: File; pdf?: File },
+    onProgress?: (pct: number) => void,
+  ) => {
+    const form = new FormData()
+    form.append('titleAr', input.titleAr)
+    form.append('titleEn', input.titleEn)
+    form.append('displayOrder', String(input.displayOrder))
+    form.append('isPreview', String(input.isPreview))
+    if (input.durationSeconds) form.append('videoDurationSeconds', String(Math.round(input.durationSeconds)))
+    if (files.video) form.append('video', files.video)
+    if (files.pdf) form.append('pdf', files.pdf)
+    return api.post(`/admin/sections/${sectionId}/lessons/upload`, form, {
+      ...multipart,
+      timeout: 0,
+      onUploadProgress: (e) => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)),
+    })
+  },
+  updateLesson: (id: string, body: LessonPatch) => api.patch(`/admin/lessons/${id}`, body),
+  replaceLessonMedia: (
+    id: string,
+    files: { video?: File; pdf?: File },
+    durationSeconds?: number,
+    onProgress?: (pct: number) => void,
+  ) => {
+    const form = new FormData()
+    if (files.video) form.append('video', files.video)
+    if (files.pdf) form.append('pdf', files.pdf)
+    if (durationSeconds) form.append('videoDurationSeconds', String(Math.round(durationSeconds)))
+    return api.post(`/admin/lessons/${id}/media`, form, {
+      ...multipart,
+      timeout: 0,
+      onUploadProgress: (e) => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)),
+    })
+  },
+  removeLesson: (id: string) => api.delete(`/admin/lessons/${id}`),
 }
