@@ -3,10 +3,10 @@ import { createBrowserRouter } from 'react-router-dom'
 import { SiteLayout } from './Layout'
 import { RequireAuth } from '@/auth/RequireAuth'
 import { HomePage } from '@/pages/home/HomePage'
-import { ComingSoonPage, NotFoundPage } from '@/pages/NotFoundPage'
+import { NotFoundPage } from '@/pages/NotFoundPage'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 
 // Pages from the design that come in the next phases.
-const soon: [string, string][] = [['admin/*', 'لوحة التحكم']]
 
 // Account pages (each its own chunk), all behind login.
 const accountPages = {
@@ -24,6 +24,16 @@ const accountPages = {
   ProfilePage: () => import('@/pages/account/ProfilePage'),
 }
 const account = (name: keyof typeof accountPages) => authPage(accountPages[name], name)
+
+// Admin pages render inside <AdminLayout> (its own sidebar, no site header).
+const adminPages = {
+  AdminDashboardPage: () => import('@/pages/admin/AdminDashboardPage'),
+  AdminOrdersPage: () => import('@/pages/admin/AdminOrdersPage'),
+  AdminConsultRequestsPage: () => import('@/pages/admin/AdminConsultRequestsPage'),
+  AdminSchedulePage: () => import('@/pages/admin/AdminSchedulePage'),
+  AdminUsersPage: () => import('@/pages/admin/AdminUsersPage'),
+}
+const admin = (name: keyof typeof adminPages) => page(adminPages[name], name)
 
 /** Lazy route: the page's module is fetched on first visit. */
 function page(load: () => Promise<Record<string, unknown>>, name: string) {
@@ -101,7 +111,22 @@ export const router = createBrowserRouter([
       { path: 'account/consultations', lazy: account('MyConsultationsPage') },
       { path: 'account/referral', lazy: account('ReferralPage') },
       { path: 'account/profile', lazy: account('ProfilePage') },
-      ...soon.map(([path, title]) => ({ path, element: <ComingSoonPage title={title} /> })),
+      { path: '*', element: <NotFoundPage /> },
+    ],
+  },
+  {
+    path: 'admin',
+    element: (
+      <RequireAuth admin>
+        <AdminLayout />
+      </RequireAuth>
+    ),
+    children: [
+      { index: true, lazy: admin('AdminDashboardPage') },
+      { path: 'orders', lazy: admin('AdminOrdersPage') },
+      { path: 'consult-requests', lazy: admin('AdminConsultRequestsPage') },
+      { path: 'schedule', lazy: admin('AdminSchedulePage') },
+      { path: 'users', lazy: admin('AdminUsersPage') },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

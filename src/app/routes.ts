@@ -43,4 +43,13 @@ export const routes = {
   referral: '/account/referral',
   myConsultations: '/account/consultations',
   admin: '/admin',
+  adminCourses: '/admin/courses',
+  adminCourse: (id: string) => `/admin/courses/${id}`,
+  adminOrders: '/admin/orders',
+  adminConsultRequests: '/admin/consult-requests',
+  adminSchedule: '/admin/schedule',
+  adminUsers: '/admin/users',
+  adminCatalog: '/admin/catalog',
+  adminBlog: '/admin/blog',
+  adminSettings: '/admin/settings',
 } as const

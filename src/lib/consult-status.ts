@@ -43,3 +43,12 @@ export function nextSession<T extends { status: ConsultStatus; scheduledAt: stri
     .filter((c) => c.status === 'SCHEDULED' && c.scheduledAt && new Date(c.scheduledAt).getTime() > now)
     .sort((a, b) => new Date(a.scheduledAt!).getTime() - new Date(b.scheduledAt!).getTime())[0]
 }
+
+/** Sessions from an hour ago onward, soonest first. */
+export function upcomingSessions<T extends { scheduledAt: string | null }>(list: T[], limit = 4) {
+  const from = Date.now() - 3_600_000
+  return list
+    .filter((r) => r.scheduledAt && new Date(r.scheduledAt).getTime() > from)
+    .sort((a, b) => +new Date(a.scheduledAt!) - +new Date(b.scheduledAt!))
+    .slice(0, limit)
+}
