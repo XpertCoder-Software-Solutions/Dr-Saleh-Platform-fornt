@@ -1,4 +1,15 @@
 import type { SVGProps } from 'react'
+import type { IconType } from 'react-icons'
+import { FaFacebookF, FaInstagram, FaTiktok, FaWhatsapp, FaYoutube } from 'react-icons/fa6'
+
+// Brand logos come from Font Awesome (react-icons) so they match the real marks.
+const brands = {
+  facebook: FaFacebookF,
+  instagram: FaInstagram,
+  youtube: FaYoutube,
+  tiktok: FaTiktok,
+  whatsapp: FaWhatsapp,
+} satisfies Record<string, IconType>
 
 // Stroke icons used across the design (24px grid, 2px stroke).
 const paths = {
@@ -37,8 +48,6 @@ const paths = {
   phone:
     'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z',
   globe: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',
-  whatsapp:
-    'M3 21l1.7-5A8.5 8.5 0 1 1 8 19.4zM9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1a4 4 0 0 1-2-2l1-1-1-2z',
   calendar: 'M4 5h16v16H4zM4 10h16M9 3v4M15 3v4',
   eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
   eyeOff:
@@ -46,11 +55,6 @@ const paths = {
   mail: 'M3 5h18v14H3zM3 6l9 7 9-7',
   lock: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',
   file: 'M14 3H6v18h12V7zM14 3v4h4',
-  facebook: 'M15 3h-2.5A4.5 4.5 0 0 0 8 7.5V10H6v4h2v7h4v-7h2.5l.5-4h-3V7.5a.5.5 0 0 1 .5-.5H15z',
-  instagram: 'M4 4h16v16H4zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM17.5 6.5h.01',
-  youtube:
-    'M2.5 7.5a3 3 0 0 1 2-2C6.3 5 12 5 12 5s5.7 0 7.5.5a3 3 0 0 1 2 2c.5 1.8.5 4.5.5 4.5s0 2.7-.5 4.5a3 3 0 0 1-2 2c-1.8.5-7.5.5-7.5.5s-5.7 0-7.5-.5a3 3 0 0 1-2-2C2 14.7 2 12 2 12s0-2.7.5-4.5zM10 15l5-3-5-3z',
-  tiktok: 'M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5M14 3c.5 2.5 2.5 4.5 5 4.5',
   alert: 'M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z',
   refresh: 'M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6',
   headphones: 'M3 18v-6a9 9 0 0 1 18 0v6M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z',
@@ -74,7 +78,7 @@ const paths = {
   sliders: 'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',
 } as const
 
-export type IconName = keyof typeof paths
+export type IconName = keyof typeof paths | keyof typeof brands
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
   name: IconName
@@ -84,6 +88,12 @@ interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
 }
 
 export function Icon({ name, size = 20, strokeWidth = 2, filled = false, ...rest }: IconProps) {
+  if (name in brands) {
+    const Brand = brands[name as keyof typeof brands]
+    return (
+      <Brand size={size} aria-hidden="true" focusable="false" className={rest.className} style={rest.style} />
+    )
+  }
   return (
     <svg
       width={size}
@@ -98,7 +108,7 @@ export function Icon({ name, size = 20, strokeWidth = 2, filled = false, ...rest
       focusable="false"
       {...rest}
     >
-      <path d={paths[name]} />
+      <path d={paths[name as keyof typeof paths]} />
     </svg>
   )
 }
