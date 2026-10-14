@@ -101,12 +101,17 @@ export function Footer() {
               </span>
             </span>
           ))}
-          <span className="flex items-center gap-2.5 text-[15px]">
+          <a
+            href={CONTACT.address.href}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(colLink, 'flex items-start gap-2.5 leading-relaxed')}
+          >
             <span className="flex size-8.5 flex-none items-center justify-center rounded-[10px] text-white glass">
-              <Icon name="clock" size={16} />
+              <Icon name="mapPin" size={16} />
             </span>
-            {CONTACT.hours.days}، {CONTACT.hours.time}
-          </span>
+            {CONTACT.address.label}
+          </a>
           <Link
             to={routes.contact}
             className="inline-flex items-center gap-1.5 font-bold text-gold-light hover:text-white"
