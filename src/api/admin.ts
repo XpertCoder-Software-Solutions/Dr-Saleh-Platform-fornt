@@ -263,3 +263,140 @@ export const adminCoursesApi = {
   },
   removeLesson: (id: string) => api.delete(`/admin/lessons/${id}`),
 }
+
+// ---------- catalog: books, products, articles ----------
+
+type FormValue = string | number | boolean | null | undefined | File | string[]
+
+/** Multipart body from a plain object; empty values are left out, arrays repeat the key. */
+export function toFormData(fields: Record<string, FormValue>) {
+  const form = new FormData()
+  for (const [k, v] of Object.entries(fields)) {
+    if (v === undefined || v === null || v === '') continue
+    if (Array.isArray(v)) v.forEach((x) => form.append(k, x))
+    else form.append(k, v instanceof File ? v : String(v))
+  }
+  return form
+}
+
+export interface NamedCategory {
+  id: string
+  nameAr: string
+  nameEn: string
+  isActive?: boolean
+  shippingCost?: number
+}
+
+export interface AdminBookFormat {
+  id: string
+  formatType: 'Physical' | 'Digital' | 'Audio'
+  sku?: string | null
+  stock?: number | null
+  weight?: number | null
+  priceEGP?: number | null
+  discountPriceEGP?: number | null
+  priceUSD?: number | null
+  discountPriceUSD?: number | null
+  audioDuration?: number | null
+  isActive: boolean
+  hasReaderFile?: boolean
+  hasAudioFile?: boolean
+}
+
+export interface AdminBook {
+  id: string
+  categoryId: string
+  slug: string
+  titleAr: string
+  titleEn: string
+  descriptionAr: string
+  descriptionEn: string
+  coverImage: string | null
+  priceEGP: number
+  discountPriceEGP: number | null
+  priceUSD: number
+  discountPriceUSD: number | null
+  isFeatured: boolean
+  isHomeDisplay: boolean
+  isActive: boolean
+  formats?: AdminBookFormat[]
+  category?: NamedCategory | null
+}
+
+export interface AdminProduct {
+  id: string
+  categoryId: string
+  slug: string
+  nameAr: string
+  nameEn: string
+  descriptionAr: string
+  descriptionEn: string
+  coverImage: string | null
+  priceEGP: number
+  discountPriceEGP: number | null
+  priceUSD: number
+  discountPriceUSD: number | null
+  stock: number
+  sku: string | null
+  isFeatured: boolean
+  isHomeDisplay: boolean
+  isActive?: boolean
+  category?: NamedCategory | null
+}
+
+export interface AdminArticle {
+  id: string
+  categoryId: string
+  slug: string
+  titleAr: string
+  titleEn: string
+  shortContentAr: string
+  shortContentEn: string
+  contentAr: string
+  contentEn: string
+  coverImage: string | null
+  isFeatured: boolean
+  isHomeDisplay: boolean
+  isActive: boolean
+  publishedAt?: string | null
+  createdAt: string
+  category?: NamedCategory | null
+  tags?: { id: string; nameAr: string }[]
+}
+
+export const catalogApi = {
+  books: () => api.get<AdminBook[]>('/books'),
+  book: (id: string) => api.get<AdminBook>(`/books/${id}`),
+  bookCategories: () => api.get<NamedCategory[]>('/book-categories'),
+  createBook: (fields: Record<string, FormValue>) =>
+    api.post<AdminBook>('/books', toFormData(fields), multipart),
+  updateBook: (id: string, fields: Record<string, FormValue>) =>
+    api.patch<AdminBook>(`/books/${id}`, toFormData(fields), multipart),
+  addFormat: (bookId: string, fields: Record<string, FormValue>) =>
+    api.post(`/books/${bookId}/formats`, toFormData(fields), { ...multipart, timeout: 0 }),
+  updateFormat: (formatId: string, fields: Record<string, FormValue>) =>
+    api.patch(`/books/formats/${formatId}`, toFormData(fields), { ...multipart, timeout: 0 }),
+  removeFormat: (formatId: string) => api.delete(`/books/formats/${formatId}`),
+
+  products: () =>
+    api.get<{ products: AdminProduct[]; pagination: Pagination }>('/admin/products', {
+      params: { limit: 100 },
+    }),
+  productCategories: () => api.get<NamedCategory[]>('/admin/product-categories'),
+  createProduct: (fields: Record<string, FormValue>) =>
+    api.post<{ product: AdminProduct }>('/admin/products', toFormData(fields), multipart),
+  updateProduct: (id: string, fields: Record<string, FormValue>) =>
+    api.patch<{ product: AdminProduct }>(`/admin/products/${id}`, toFormData(fields), multipart),
+
+  articles: () =>
+    api.get<{ articles: AdminArticle[]; pagination: Pagination }>('/admin/articles', {
+      params: { limit: 100 },
+    }),
+  articleCategories: () => api.get<NamedCategory[]>('/admin/article-categories'),
+  articleTags: () => api.get<NamedCategory[]>('/admin/article-tags'),
+  createArticle: (fields: Record<string, FormValue>) =>
+    api.post<{ article: AdminArticle }>('/admin/articles', toFormData(fields), multipart),
+  updateArticle: (id: string, fields: Record<string, FormValue>) =>
+    api.patch<{ article: AdminArticle }>(`/admin/articles/${id}`, toFormData(fields), multipart),
+  removeArticle: (id: string) => api.delete(`/admin/articles/${id}`),
+}
