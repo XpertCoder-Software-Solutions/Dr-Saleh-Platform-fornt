@@ -19,6 +19,7 @@ import { CHANNELS } from './channels'
 import { BookCard } from '@/components/catalog/BookCard'
 import { ArticleCard } from '@/components/catalog/ArticleCard'
 import { articlesGridClass, booksGridClass } from '@/components/catalog/grids'
+import { useTypewriter } from '@/lib/useTypewriter'
 
 const HERO_WORDS = {
   guest: ['فهم أولادكم', 'قلب ابنكم', 'هدوءكم إنتم'],
@@ -110,12 +111,7 @@ const floatCard = 'absolute flex gap-3 rounded-tile bg-white shadow-float'
 function Hero() {
   const t = useCopy()
   const audience = useAudience()
-  const words = HERO_WORDS[audience]
-  const [w, setW] = useState(0)
-  useEffect(() => {
-    const id = setInterval(() => setW((x) => (x + 1) % words.length), 2600)
-    return () => clearInterval(id)
-  }, [words.length])
+  const typed = useTypewriter(HERO_WORDS[audience])
 
   const { data: home } = useQuery({ queryKey: ['courses', 'home'], queryFn: coursesApi.home })
   const proof = useMemo(() => ratingSummary(home ?? []), [home])
@@ -134,14 +130,14 @@ function Hero() {
             <span className="size-2.5 flex-none animate-pulse-ring rounded-full bg-sky" />
             المستشار النفسي والتربوي · دورات · كتب · استشارات
           </div>
-          <h1 className="animate-rise text-[clamp(40px,6vw,64px)] leading-[1.2] font-bold tracking-[-0.5px] text-white [animation-delay:.1s]">
+          <h1 className="animate-rise text-[clamp(40px,6vw,64px)] leading-[1.2] font-bold tracking-[-0.5px] text-white [animation-delay:.1s] max-[400px]:text-[34px]">
             تربية واعية
             <br />
-            تبدأ من{' '}
-            <span className="text-sheen" aria-live="polite">
-              {words[w]}
+            تبدأ من <span className="sr-only">{typed.word}</span>
+            <span className="text-sheen" aria-hidden="true">
+              {typed.text}
             </span>
-            <span className="caret" aria-hidden="true" />
+            <span className={cn('caret', typed.typing && 'animate-none')} aria-hidden="true" />
           </h1>
           <p className="max-w-140 animate-rise text-xl leading-[1.85] text-on-dark [animation-delay:.2s] max-sm:text-[17px]">
             {t('home.hero.body')}
