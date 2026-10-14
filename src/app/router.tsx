@@ -1,12 +1,12 @@
 import type React from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import { SiteLayout } from './Layout'
+import { RequireAuth } from '@/auth/RequireAuth'
 import { HomePage } from '@/pages/home/HomePage'
 import { ComingSoonPage, NotFoundPage } from '@/pages/NotFoundPage'
 
 // Pages from the design that come in the next phases.
 const soon: [string, string][] = [
-  ['cart', 'السلة'],
   ['account/*', 'حسابي'],
   ['admin/*', 'لوحة التحكم'],
 ]
@@ -14,6 +14,20 @@ const soon: [string, string][] = [
 /** Lazy route: the page's module is fetched on first visit. */
 function page(load: () => Promise<Record<string, unknown>>, name: string) {
   return async () => ({ Component: (await load())[name] as React.ComponentType })
+}
+
+/** Lazy route that needs a signed-in user. */
+function authPage(load: () => Promise<Record<string, unknown>>, name: string) {
+  return async () => {
+    const Page = (await load())[name] as React.ComponentType
+    return {
+      Component: () => (
+        <RequireAuth>
+          <Page />
+        </RequireAuth>
+      ),
+    }
+  }
 }
 
 // Home loads with the app; every other page is its own chunk, fetched on first visit.
@@ -60,6 +74,10 @@ export const router = createBrowserRouter([
         lazy: page(() => import('@/pages/certificates/VerifyCertificatePage'), 'VerifyCertificatePage'),
       },
       { path: 'legal/:doc', lazy: page(() => import('@/pages/legal/LegalPage'), 'LegalPage') },
+      { path: 'cart', lazy: authPage(() => import('@/pages/checkout/CartPage'), 'CartPage') },
+      { path: 'checkout', lazy: authPage(() => import('@/pages/checkout/CheckoutPage'), 'CheckoutPage') },
+      { path: 'checkout/pay/:orderId', lazy: authPage(() => import('@/pages/checkout/PayPage'), 'PayPage') },
+      { path: 'checkout/result', lazy: authPage(() => import('@/pages/checkout/ResultPage'), 'ResultPage') },
       ...soon.map(([path, title]) => ({ path, element: <ComingSoonPage title={title} /> })),
       { path: '*', element: <NotFoundPage /> },
     ],

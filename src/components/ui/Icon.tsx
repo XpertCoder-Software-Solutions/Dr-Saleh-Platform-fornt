@@ -55,6 +55,11 @@ const paths = {
   refresh: 'M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6',
   headphones: 'M3 18v-6a9 9 0 0 1 18 0v6M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z',
   plus: 'M12 5v14M5 12h14',
+  trash: 'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6',
+  card: 'M2 5h20v14H2zM2 10h20M6 15h4',
+  wallet: 'M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-4v4M17 13h.01',
+  mapPin: 'M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
+  download: 'M12 3v12M7 10l5 5 5-5M4 21h16',
   minus: 'M5 12h14',
   shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
   truck:

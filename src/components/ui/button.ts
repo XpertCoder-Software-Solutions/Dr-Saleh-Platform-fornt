@@ -1,6 +1,6 @@
 import { cn } from '@/lib/cn'
 
-type Variant = 'gold' | 'navy' | 'glass' | 'outline' | 'ghost'
+type Variant = 'gold' | 'navy' | 'glass' | 'outline' | 'ghost' | 'black' | 'whatsapp'
 type Size = 'sm' | 'md' | 'lg'
 
 const base =
@@ -14,6 +14,8 @@ const variants: Record<Variant, string> = {
   glass: 'glass font-semibold text-white hover:bg-white/15 hover:text-white',
   outline: 'border-[1.5px] border-line-2 bg-white text-ink hover:border-blue-300 hover:text-ink',
   ghost: 'bg-transparent text-blue-500 hover:bg-hover',
+  black: 'bg-black text-white hover:-translate-y-0.5 hover:text-white',
+  whatsapp: 'bg-[#1B8A5A] text-white hover:bg-[#157049] hover:text-white',
 }
 
 const sizes: Record<Size, string> = {
